@@ -4,6 +4,7 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
+import Foundation
 import Observation
 
 /// Manages the chats created during the current app session.
@@ -54,5 +55,13 @@ final class ChatListViewModel {
 	/// - Parameter id: The identifier of the chat to remove.
 	func removeChat(withID id: ChatViewModel.ID) {
 		chats.removeAll { $0.id == id }
+	}
+
+	/// Removes chats at offsets supplied by a list deletion action.
+	/// - Parameter offsets: The positions of the chats to remove.
+	func removeChats(atOffsets offsets: IndexSet) {
+		for offset in offsets.sorted(by: >) {
+			chats.remove(at: offset)
+		}
 	}
 }
