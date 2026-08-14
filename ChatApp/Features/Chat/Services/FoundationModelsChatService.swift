@@ -8,6 +8,8 @@ import FoundationModels
 
 /// Generates chat responses using Apple's on-device Foundation Models framework.
 final class FoundationModelsChatService: ChatProviding {
+	static let modelID = "apple-foundation-model"
+
 	private let foundationModel: SystemLanguageModel
 
 	private let session: LanguageModelSession
@@ -20,7 +22,9 @@ final class FoundationModelsChatService: ChatProviding {
 	/// Information about the active Apple Foundation Model.
 	var model: ChatModel {
 		ChatModel(
+			id: Self.modelID,
 			displayName: "Apple Foundation Model",
+			providerName: "Apple",
 			availability: availability
 		)
 	}
