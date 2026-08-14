@@ -7,13 +7,13 @@
 import FoundationModels
 
 final class FoundationModelsChatService: ChatProviding {
-    private let session: LanguageModelSession
+	private let session: LanguageModelSession
 
-    init(session: LanguageModelSession = LanguageModelSession()) {
-        self.session = session
-    }
+	init(session: LanguageModelSession = LanguageModelSession()) {
+		self.session = session
+	}
 
-    func generateReply(to message: String) async throws -> String {
-        try await session.respond(to: message).content
-    }
+	func generateReply(to message: String) async throws -> String {
+		try await session.respond(to: message).content
+	}
 }

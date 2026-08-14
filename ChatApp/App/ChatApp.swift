@@ -8,9 +8,9 @@ import SwiftUI
 
 @main
 struct ChatApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ChatView()
-        }
-    }
+	var body: some Scene {
+		WindowGroup {
+			ChatView()
+		}
+	}
 }

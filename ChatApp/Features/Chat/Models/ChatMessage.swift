@@ -7,7 +7,7 @@
 import Foundation
 
 struct ChatMessage: Identifiable {
-    let id = UUID()
-    let text: String
-    let role: ChatMessageRole
+	let id = UUID()
+	let text: String
+	let role: ChatMessageRole
 }
