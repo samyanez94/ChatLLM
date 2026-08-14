@@ -24,9 +24,9 @@ struct ChatListRow: View {
 				.font(.subheadline)
 				.foregroundStyle(.secondary)
 				.lineLimit(2)
-            Text(chat.model.displayName)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+			Text(chat.model.displayName)
+				.font(.caption)
+				.foregroundStyle(.tertiary)
 		}
 		.padding(.vertical, 4)
 		.accessibilityElement(children: .combine)

@@ -1,0 +1,45 @@
+//
+//  ModelSelectionRow.swift
+//  ModelSelectionRow
+//
+//  Created by Samuel Yanez on 8/14/26.
+
+import SwiftUI
+
+struct ModelSelectionRow: View {
+	let model: ChatModel
+
+	var body: some View {
+		HStack(spacing: 12) {
+			Image(systemName: model.availability.isAvailable ? "cpu" : "exclamationmark.triangle.fill")
+				.foregroundStyle(.secondary)
+				.accessibilityHidden(true)
+
+			VStack(alignment: .leading, spacing: 3) {
+				Text(model.displayName)
+					.font(.headline)
+
+				Text(model.providerName)
+					.font(.subheadline)
+					.foregroundStyle(.secondary)
+
+				if let message = model.availability.unavailableMessage {
+					Text(message)
+						.font(.footnote)
+						.foregroundStyle(.secondary)
+				}
+			}
+
+			Spacer()
+
+			if model.availability.isAvailable {
+				Image(systemName: "chevron.right")
+					.font(.footnote)
+					.foregroundStyle(.tertiary)
+					.accessibilityHidden(true)
+			}
+		}
+		.contentShape(.rect)
+		.accessibilityElement(children: .combine)
+	}
+}

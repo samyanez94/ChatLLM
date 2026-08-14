@@ -16,30 +16,28 @@ struct ChatView: View {
 	var body: some View {
 		@Bindable var viewModel = viewModel
 
-		NavigationStack {
-			VStack(spacing: 0) {
-				ModelIndicatorView(
-					modelName: viewModel.model.displayName,
-					availability: viewModel.model.availability
-				)
-				Divider()
-				MessageList(
-					messages: viewModel.messages,
-					isResponding: viewModel.isResponding
-				)
-				Divider()
-				MessageComposer(
-					draft: $viewModel.draft,
-					canSend: viewModel.canSend,
-					send: sendMessage
-				)
-			}
-			.navigationTitle("Chat")
-			.navigationBarTitleDisplayMode(.inline)
-			.alert("Something went wrong", isPresented: $viewModel.isShowingError) {
-			} message: {
-				Text(viewModel.errorMessage ?? "")
-			}
+		VStack(spacing: 0) {
+			ModelIndicatorView(
+				modelName: viewModel.model.displayName,
+				availability: viewModel.model.availability
+			)
+			Divider()
+			MessageList(
+				messages: viewModel.messages,
+				isResponding: viewModel.isResponding
+			)
+			Divider()
+			MessageComposer(
+				draft: $viewModel.draft,
+				canSend: viewModel.canSend,
+				send: sendMessage
+			)
+		}
+		.navigationTitle("Chat")
+		.navigationBarTitleDisplayMode(.inline)
+		.alert("Something went wrong", isPresented: $viewModel.isShowingError) {
+		} message: {
+			Text(viewModel.errorMessage ?? "")
 		}
 	}
 
@@ -51,5 +49,7 @@ struct ChatView: View {
 }
 
 #Preview {
-	ChatView()
+	NavigationStack {
+		ChatView()
+	}
 }
