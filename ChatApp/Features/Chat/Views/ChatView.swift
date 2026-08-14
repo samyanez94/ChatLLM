@@ -18,7 +18,10 @@ struct ChatView: View {
 
 		NavigationStack {
 			VStack(spacing: 0) {
-				ModelIndicatorView(modelName: viewModel.modelDisplayName)
+				ModelIndicatorView(
+					modelName: viewModel.modelDisplayName,
+					availability: viewModel.modelAvailability
+				)
 				Divider()
 				MessageList(
 					messages: viewModel.messages,

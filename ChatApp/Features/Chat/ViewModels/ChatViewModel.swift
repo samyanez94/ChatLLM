@@ -29,18 +29,30 @@ final class ChatViewModel {
 	}
 
 	var canSend: Bool {
-		!isResponding && !trimmedDraft.isEmpty
+		modelAvailability.isAvailable && !isResponding && !trimmedDraft.isEmpty
 	}
 
 	var modelDisplayName: String {
 		provider.displayName
 	}
 
+	var modelAvailability: ChatModelAvailability {
+		provider.availability
+	}
+
 	func sendMessage() async {
 		let message = trimmedDraft
-		guard !trimmedDraft.isEmpty,
+		guard !message.isEmpty,
 			!isResponding
 		else {
+			return
+		}
+
+		let availability = modelAvailability
+        
+		guard availability.isAvailable else {
+			errorMessage = availability.unavailableMessage ?? "This model is currently unavailable."
+			isShowingError = true
 			return
 		}
 

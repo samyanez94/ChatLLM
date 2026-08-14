@@ -6,6 +6,8 @@
 
 protocol ChatProviding {
 	var displayName: String { get }
+    
+	var availability: ChatModelAvailability { get }
 
 	func generateReply(to message: String) async throws -> String
 }
