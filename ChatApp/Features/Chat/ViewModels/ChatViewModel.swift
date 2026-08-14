@@ -34,7 +34,7 @@ final class ChatViewModel {
 
 	func sendMessage() async {
 		let message = trimmedDraft
-		guard !message.isEmpty,
+		guard !trimmedDraft.isEmpty,
 			!isResponding
 		else {
 			return

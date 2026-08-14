@@ -15,7 +15,6 @@ struct ChatProviderStub: ChatProviding {
 		guard let reply else {
 			throw CocoaError(.fileReadUnknown)
 		}
-
 		return reply
 	}
 }

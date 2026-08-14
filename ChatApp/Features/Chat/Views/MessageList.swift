@@ -7,9 +7,10 @@
 import SwiftUI
 
 struct MessageList: View {
-	private static let progressID = "generating-response"
+	private static let progressId = "generating-response"
 
 	let messages: [ChatMessage]
+
 	let isResponding: Bool
 
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -25,7 +26,7 @@ struct MessageList: View {
 					if isResponding {
 						ProgressView()
 							.frame(maxWidth: .infinity, alignment: .leading)
-							.id(Self.progressID)
+							.id(Self.progressId)
 							.accessibilityLabel("Generating response")
 					}
 				}
@@ -42,12 +43,11 @@ struct MessageList: View {
 	}
 
 	private func scrollToLatestMessage(using proxy: ScrollViewProxy) {
-		let target: AnyHashable? =
-			isResponding
-			? Self.progressID
-			: messages.last?.id
+		let target: AnyHashable? = isResponding ? Self.progressId : messages.last?.id
 
-		guard let target else { return }
+		guard let target else {
+			return
+		}
 
 		if reduceMotion {
 			proxy.scrollTo(target, anchor: .bottom)
