@@ -7,6 +7,9 @@
 import FoundationModels
 
 final class FoundationModelsChatService: ChatProviding {
+    
+	let displayName = "Apple Foundation Model"
+
 	private let session: LanguageModelSession
 
 	init(session: LanguageModelSession = LanguageModelSession()) {

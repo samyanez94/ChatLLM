@@ -9,6 +9,7 @@ import Foundation
 @testable import ChatApp
 
 struct ChatProviderStub: ChatProviding {
+	let displayName = "Test Model"
 	let reply: String?
 
 	func generateReply(to _: String) async throws -> String {
