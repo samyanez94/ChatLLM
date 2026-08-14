@@ -17,6 +17,7 @@ struct MessageComposer: View {
 				.lineLimit(1...5)
 				.padding(.horizontal, 16)
 				.padding(.vertical, 10)
+				.frame(minHeight: 44, alignment: .leading)
 				.background(.secondary.opacity(0.15))
 				.clipShape(.rect(cornerRadius: 18))
 				.submitLabel(.send)
@@ -26,6 +27,8 @@ struct MessageComposer: View {
 				.labelStyle(.iconOnly)
 				.buttonStyle(.borderedProminent)
 				.buttonBorderShape(.circle)
+				.frame(minWidth: 44, minHeight: 44)
+				.contentShape(.circle)
 				.disabled(!canSend)
 		}
 		.padding()

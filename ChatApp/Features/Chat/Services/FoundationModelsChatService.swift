@@ -6,20 +6,32 @@
 
 import FoundationModels
 
+/// Generates chat responses using Apple's on-device Foundation Models framework.
 final class FoundationModelsChatService: ChatProviding {
-	let displayName = "Apple Foundation Model"
+	private let foundationModel: SystemLanguageModel
 
-	private let model: SystemLanguageModel
-    
 	private let session: LanguageModelSession
 
 	init(model: SystemLanguageModel = .default) {
-		self.model = model
+		self.foundationModel = model
 		self.session = LanguageModelSession(model: model)
 	}
 
-	var availability: ChatModelAvailability {
-		switch model.availability {
+	/// Information about the active Apple Foundation Model.
+	var model: ChatModel {
+		ChatModel(
+			displayName: "Apple Foundation Model",
+			availability: availability
+		)
+	}
+
+	/// Generates a reply using the current language-model session.
+	func generateReply(to message: String) async throws -> String {
+		try await session.respond(to: message).content
+	}
+
+	private var availability: ChatModelAvailability {
+		switch foundationModel.availability {
 		case .available:
 			.available
 		case .unavailable(.deviceNotEligible):
@@ -31,9 +43,5 @@ final class FoundationModelsChatService: ChatProviding {
 		case .unavailable:
 			.unavailable(message: "Apple Foundation Model is currently unavailable.")
 		}
-	}
-
-	func generateReply(to message: String) async throws -> String {
-		try await session.respond(to: message).content
 	}
 }

@@ -11,19 +11,21 @@ struct ModelIndicatorView: View {
 	let availability: ChatModelAvailability
 
 	var body: some View {
-		HStack(spacing: 8) {
-			Image(systemName: availability.isAvailable ? "cpu" : "exclamationmark.triangle.fill")
-				.foregroundStyle(.secondary)
+		HStack {
+			Label {
+				VStack(alignment: .leading, spacing: 2) {
+					Text(modelName)
+						.font(.subheadline.weight(.medium))
 
-			VStack(alignment: .leading, spacing: 2) {
-				Text(modelName)
-					.font(.subheadline.weight(.medium))
-
-				if let message = availability.unavailableMessage {
-					Text(message)
-						.font(.footnote)
-						.foregroundStyle(.secondary)
+					if let message = availability.unavailableMessage {
+						Text(message)
+							.font(.footnote)
+							.foregroundStyle(.secondary)
+					}
 				}
+			} icon: {
+				Image(systemName: availability.isAvailable ? "cpu" : "exclamationmark.triangle.fill")
+					.foregroundStyle(.secondary)
 			}
 
 			Spacer()

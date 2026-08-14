@@ -7,15 +7,21 @@
 import Foundation
 import Observation
 
+/// Manages the conversation state and coordinates requests with the selected model provider.
 @Observable
 final class ChatViewModel {
+	/// The message currently being composed by the user.
 	var draft = ""
-	private(set) var messages: [ChatMessage]
-	private(set) var isResponding = false
-	private(set) var errorMessage = ""
-	var isShowingError = false
 
-	@ObservationIgnored
+	/// The messages currently displayed in the conversation.
+	private(set) var messages: [ChatMessage]
+
+	/// Whether the provider is generating a reply.
+	private(set) var isResponding = false
+
+	/// The latest user-facing error, or `nil` when no error is presented.
+	private(set) var errorMessage: String?
+
 	private let provider: any ChatProviding
 
 	init(
@@ -28,33 +34,35 @@ final class ChatViewModel {
 		self.messages = messages
 	}
 
+	/// Information about the provider's active model.
+	var model: ChatModel {
+		provider.model
+	}
+
+	/// Whether the current draft can be sent to the active model.
 	var canSend: Bool {
-		modelAvailability.isAvailable && !isResponding && !trimmedDraft.isEmpty
+		model.availability.isAvailable && !isResponding && !trimmedDraft.isEmpty
 	}
 
-	var modelDisplayName: String {
-		provider.displayName
+	/// Whether the error alert is currently presented.
+	var isShowingError: Bool {
+		get {
+			errorMessage != nil
+		}
+		set {
+			if !newValue {
+				errorMessage = nil
+			}
+		}
 	}
 
-	var modelAvailability: ChatModelAvailability {
-		provider.availability
-	}
-
+	/// Sends the current draft and appends the generated reply to the conversation.
 	func sendMessage() async {
-		let message = trimmedDraft
-		guard !message.isEmpty,
-			!isResponding
-		else {
+		guard canSend else {
 			return
 		}
 
-		let availability = modelAvailability
-        
-		guard availability.isAvailable else {
-			errorMessage = availability.unavailableMessage ?? "This model is currently unavailable."
-			isShowingError = true
-			return
-		}
+		let message = trimmedDraft
 
 		messages.append(ChatMessage(text: message, role: .user))
 		draft = ""
@@ -63,17 +71,13 @@ final class ChatViewModel {
 			isResponding = false
 		}
 
-		do {
-			let reply = try await provider.generateReply(to: message)
-			try Task.checkCancellation()
-			messages.append(
-				ChatMessage(text: reply, role: .assistant)
-			)
-		} catch is CancellationError {
-			return
+        do {
+            let reply = try await provider.generateReply(to: message)
+            messages.append(
+                ChatMessage(text: reply, role: .assistant)
+            )
 		} catch {
 			errorMessage = "The response couldn’t be generated. Please try again."
-			isShowingError = true
 		}
 	}
 

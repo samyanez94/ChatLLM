@@ -19,8 +19,8 @@ struct ChatView: View {
 		NavigationStack {
 			VStack(spacing: 0) {
 				ModelIndicatorView(
-					modelName: viewModel.modelDisplayName,
-					availability: viewModel.modelAvailability
+					modelName: viewModel.model.displayName,
+					availability: viewModel.model.availability
 				)
 				Divider()
 				MessageList(
@@ -37,9 +37,8 @@ struct ChatView: View {
 			.navigationTitle("Chat")
 			.navigationBarTitleDisplayMode(.inline)
 			.alert("Something went wrong", isPresented: $viewModel.isShowingError) {
-				Button("OK", role: .cancel) {}
 			} message: {
-				Text(viewModel.errorMessage)
+				Text(viewModel.errorMessage ?? "")
 			}
 		}
 	}
