@@ -10,7 +10,7 @@ import Foundation
 /// Reads the local OpenAI configuration embedded in the app at build time.
 struct OpenAIConfiguration {
 	private static let secretsResourceName = "OpenAISecrets"
-	private static let apiKey = ""
+	private static let apiKey = "APIKey"
 
 	/// The configured API key, or `nil` when the build has no usable key.
 	let apiKey: String?
