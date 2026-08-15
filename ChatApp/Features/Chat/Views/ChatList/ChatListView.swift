@@ -58,7 +58,7 @@ struct ChatListView: View {
 			.toolbar {
 				ToolbarItem(placement: .primaryAction) {
 					Button("New Chat", systemImage: "square.and.pencil", action: presentModelSelection)
-						.buttonStyle(.glassProminent)
+						.buttonStyle(.borderedProminent)
 						.sheet(
 							isPresented: $isSelectingModel,
 							onDismiss: openPendingChat

@@ -11,19 +11,16 @@ struct ChatListRow: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 4) {
-			HStack(alignment: .firstTextBaseline) {
-				Text(chat.title)
-					.font(.headline)
-					.lineLimit(1)
-				Spacer()
-				Text(chat.updatedAt, format: .relative(presentation: .named))
-					.font(.caption)
-					.foregroundStyle(.secondary)
-			}
+			Text(chat.title)
+				.font(.headline)
+				.lineLimit(1)
 			Text(chat.preview)
 				.font(.subheadline)
 				.foregroundStyle(.secondary)
 				.lineLimit(2)
+			Text("Last updated \(chat.updatedAt, format: .relative(presentation: .named))")
+				.font(.caption)
+				.foregroundStyle(.tertiary)
 			Text(chat.model.displayName)
 				.font(.caption)
 				.foregroundStyle(.tertiary)

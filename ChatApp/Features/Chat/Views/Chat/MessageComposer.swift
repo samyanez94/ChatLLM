@@ -12,7 +12,7 @@ struct MessageComposer: View {
 	let send: () -> Void
 
 	var body: some View {
-		HStack(alignment: .bottom, spacing: 12) {
+		HStack(alignment: .center, spacing: 12) {
 			TextField("Message", text: $draft, axis: .vertical)
 				.lineLimit(1...5)
 				.padding(.horizontal, 16)
@@ -22,14 +22,16 @@ struct MessageComposer: View {
 				.clipShape(.rect(cornerRadius: 18))
 				.submitLabel(.send)
 				.onSubmit(send)
-
-			Button("Send", systemImage: "arrow.up", action: send)
-				.labelStyle(.iconOnly)
-				.buttonStyle(.borderedProminent)
-				.buttonBorderShape(.circle)
-				.frame(minWidth: 44, minHeight: 44)
-				.contentShape(.circle)
-				.disabled(!canSend)
+			Button(action: send) {
+				Label("Send", systemImage: "arrow.up")
+					.labelStyle(.iconOnly)
+					.padding(.vertical, 10)
+			}
+			.buttonStyle(.borderedProminent)
+			.buttonBorderShape(.circle)
+			.frame(minWidth: 44, minHeight: 44)
+			.contentShape(.circle)
+			.disabled(!canSend)
 		}
 		.padding()
 	}
