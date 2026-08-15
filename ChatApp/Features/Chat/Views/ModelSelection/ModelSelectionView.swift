@@ -10,7 +10,6 @@ struct ModelSelectionView: View {
 	@Environment(\.dismiss) private var dismiss
 
 	let models: [ChatModel]
-
 	let selectModel: (ChatModel) -> Void
 
 	var body: some View {

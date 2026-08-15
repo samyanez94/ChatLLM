@@ -39,21 +39,20 @@ final class ChatListViewModel {
 	/// - Parameter model: The model to assign to the conversation.
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
 	func createChat(using model: ChatModel) -> ChatViewModel? {
-		guard
-			model.availability.isAvailable,
+		guard model.availability.isAvailable,
 			let provider = providerFactory.makeProvider(for: model.id),
 			provider.model.availability.isAvailable
 		else {
 			return nil
 		}
 		let chat = ChatViewModel(provider: provider)
-		chats.insert(chat, at: 0)
+		chats.append(chat)
 		return chat
 	}
 
 	/// Finds a chat by its stable identifier.
 	/// - Parameter id: The identifier of the requested chat.
-	func chat(withID id: ChatViewModel.ID) -> ChatViewModel? {
+	func chat(withId id: ChatViewModel.ID) -> ChatViewModel? {
 		chats.first { $0.id == id }
 	}
 
@@ -61,9 +60,8 @@ final class ChatListViewModel {
 	/// - Parameter offsets: The positions of the chats to remove.
 	func removeChats(atOffsets offsets: IndexSet) {
 		let visibleChats = visibleChats
-		let chatIDs = offsets.map { visibleChats[$0].id }
-
-		chats.removeAll { chatIDs.contains($0.id) }
+		let chatIds = offsets.map { visibleChats[$0].id }
+		chats.removeAll { chatIds.contains($0.id) }
 	}
 
 	/// Removes chats that were abandoned before the user sent a message.

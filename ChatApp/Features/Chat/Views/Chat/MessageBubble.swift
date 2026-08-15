@@ -21,7 +21,6 @@ struct MessageBubble: View {
 				.foregroundStyle(foregroundStyle)
 				.clipShape(.rect(cornerRadius: 18))
 				.accessibilityLabel("\(speakerName): \(message.text)")
-
 			if message.role == .assistant {
 				Spacer(minLength: 48)
 			}

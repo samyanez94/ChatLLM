@@ -22,16 +22,14 @@ struct MessageComposer: View {
 				.clipShape(.rect(cornerRadius: 18))
 				.submitLabel(.send)
 				.onSubmit(send)
-			Button(action: send) {
-				Label("Send", systemImage: "arrow.up")
-					.labelStyle(.iconOnly)
-					.padding(.vertical, 10)
-			}
-			.buttonStyle(.borderedProminent)
-			.buttonBorderShape(.circle)
-			.frame(minWidth: 44, minHeight: 44)
-			.contentShape(.circle)
-			.disabled(!canSend)
+			Button("Send", systemImage: "arrow.up", action: send)
+				.labelStyle(.iconOnly)
+				.padding(.vertical, 10)
+				.buttonStyle(.borderedProminent)
+				.buttonBorderShape(.circle)
+				.frame(minWidth: 44, minHeight: 44)
+				.contentShape(.circle)
+				.disabled(!canSend)
 		}
 		.padding()
 	}

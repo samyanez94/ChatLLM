@@ -10,7 +10,6 @@ struct MessageList: View {
 	private static let progressId = "generating-response"
 
 	let messages: [ChatMessage]
-
 	let isResponding: Bool
 
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion

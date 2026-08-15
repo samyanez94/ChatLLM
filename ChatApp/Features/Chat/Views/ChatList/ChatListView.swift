@@ -12,9 +12,7 @@ struct ChatListView: View {
 	@State private var isSelectingModel = false
 	@State private var pendingChatId: ChatViewModel.ID?
 
-	init(
-		viewModel: ChatListViewModel = ChatListViewModel()
-	) {
+	init(viewModel: ChatListViewModel = ChatListViewModel()) {
 		_viewModel = State(initialValue: viewModel)
 	}
 
@@ -44,8 +42,8 @@ struct ChatListView: View {
 				}
 			}
 			.navigationTitle("Chats")
-			.navigationDestination(for: ChatViewModel.ID.self) { chatID in
-				if let chat = viewModel.chat(withID: chatID) {
+			.navigationDestination(for: ChatViewModel.ID.self) { chatId in
+				if let chat = viewModel.chat(withId: chatId) {
 					ChatView(viewModel: chat)
 				} else {
 					ContentUnavailableView(
