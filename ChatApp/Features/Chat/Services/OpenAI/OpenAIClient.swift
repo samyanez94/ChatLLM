@@ -35,12 +35,12 @@ nonisolated struct OpenAIClient: Sendable {
 	func createResponse(
 		model: String,
 		input: String,
-		previousResponseID: String? = nil
+        previousResponseId: String? = nil
 	) async throws -> OpenAIResponse {
 		let request = try makeRequest(
 			model: model,
 			input: input,
-			previousResponseID: previousResponseID
+            previousResponseId: previousResponseId
 		)
 		let (data, response) = try await session.data(for: request)
 		let decoder = JSONDecoder()
@@ -80,12 +80,12 @@ nonisolated struct OpenAIClient: Sendable {
 	private func makeRequest(
 		model: String,
 		input: String,
-		previousResponseID: String?
+        previousResponseId: String?
 	) throws -> URLRequest {
 		let payload = RequestPayload(
 			model: model,
 			input: input,
-			previousResponseID: previousResponseID
+            previousResponseId: previousResponseId
 		)
 		var request = URLRequest(url: endpoint)
 		request.httpMethod = "POST"
@@ -101,12 +101,12 @@ extension OpenAIClient {
 	fileprivate nonisolated struct RequestPayload: Encodable, Sendable {
 		let model: String
 		let input: String
-		let previousResponseID: String?
+		let previousResponseId: String?
 
 		private enum CodingKeys: String, CodingKey {
 			case model
 			case input
-			case previousResponseID = "previous_response_id"
+			case previousResponseId = "previous_response_id"
 		}
 	}
 
