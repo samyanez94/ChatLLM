@@ -13,9 +13,6 @@ final class ChatViewModel: Identifiable {
 	/// The stable identifier for this conversation.
 	let id: UUID
 
-	/// The date the conversation was created.
-	let createdAt: Date
-
 	/// The message currently being composed by the user.
 	var draft = ""
 
@@ -35,17 +32,15 @@ final class ChatViewModel: Identifiable {
 
 	init(
 		id: UUID = UUID(),
-		createdAt: Date = .now,
 		provider: any ChatProviding = FoundationModelsChatService(),
 		messages: [ChatMessage] = [
 			ChatMessage(text: "Hi! How can I help?", role: .assistant)
 		]
 	) {
 		self.id = id
-		self.createdAt = createdAt
 		self.provider = provider
 		self.messages = messages
-		self.updatedAt = createdAt
+		self.updatedAt = .now
 	}
 
 	/// Information about the model assigned to this conversation.

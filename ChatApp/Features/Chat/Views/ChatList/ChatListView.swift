@@ -80,8 +80,12 @@ struct ChatListView: View {
 	}
 
 	private func selectModel(_ model: ChatModel) {
+		guard let chat = viewModel.createChat(using: model) else {
+			return
+		}
+
+		pendingChatId = chat.id
 		isSelectingModel = false
-		pendingChatId = viewModel.createChat(using: model)?.id
 	}
 
 	private func openPendingChat() {

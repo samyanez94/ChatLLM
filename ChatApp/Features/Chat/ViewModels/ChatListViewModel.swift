@@ -28,15 +28,16 @@ final class ChatListViewModel {
 		providerFactory.models
 	}
 
-	/// The chats that contain a user-started conversation and belong in the list.
+	/// User-started conversations ordered by most recent activity.
 	var visibleChats: [ChatViewModel] {
-		chats.filter(\.hasUserMessages)
+		chats
+			.filter(\.hasUserMessages)
+			.sorted { $0.updatedAt > $1.updatedAt }
 	}
 
 	/// Creates and stores a chat with a fresh provider session.
 	/// - Parameter model: The model to assign to the conversation.
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
-	@discardableResult
 	func createChat(using model: ChatModel) -> ChatViewModel? {
 		guard
 			model.availability.isAvailable,
@@ -56,25 +57,11 @@ final class ChatListViewModel {
 		chats.first { $0.id == id }
 	}
 
-	/// Removes a chat from the current app session.
-	/// - Parameter id: The identifier of the chat to remove.
-	func removeChat(withID id: ChatViewModel.ID) {
-		chats.removeAll { $0.id == id }
-	}
-
 	/// Removes chats at offsets supplied by a list deletion action.
 	/// - Parameter offsets: The positions of the chats to remove.
 	func removeChats(atOffsets offsets: IndexSet) {
 		let visibleChats = visibleChats
-		let chatIDs = Set<ChatViewModel.ID>(
-			offsets.compactMap { offset in
-				guard visibleChats.indices.contains(offset) else {
-					return nil
-				}
-
-				return visibleChats[offset].id
-			}
-		)
+		let chatIDs = offsets.map { visibleChats[$0].id }
 
 		chats.removeAll { chatIDs.contains($0.id) }
 	}

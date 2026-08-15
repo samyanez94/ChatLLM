@@ -12,11 +12,10 @@ final class FoundationModelsChatService: ChatProviding {
 
 	private let foundationModel: SystemLanguageModel
 
-	private let session: LanguageModelSession
+	private lazy var session = LanguageModelSession(model: foundationModel)
 
 	init(model: SystemLanguageModel = .default) {
 		self.foundationModel = model
-		self.session = LanguageModelSession(model: model)
 	}
 
 	/// Information about the active Apple Foundation Model.

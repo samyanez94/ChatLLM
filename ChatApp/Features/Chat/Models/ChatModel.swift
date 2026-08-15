@@ -5,7 +5,7 @@
 //  Created by Samuel Yanez on 8/14/26.
 
 /// Descriptive information about a model that can participate in a chat.
-struct ChatModel: Identifiable, Equatable {
+struct ChatModel: Identifiable {
 	/// The stable identifier used to select this model.
 	let id: String
 

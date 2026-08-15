@@ -17,10 +17,7 @@ struct ChatView: View {
 		@Bindable var viewModel = viewModel
 
 		VStack(spacing: 0) {
-			ModelIndicatorView(
-				modelName: viewModel.model.displayName,
-				availability: viewModel.model.availability
-			)
+			ChatHeaderView(model: viewModel.model)
 			Divider()
 			MessageList(
 				messages: viewModel.messages,
