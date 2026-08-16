@@ -11,12 +11,17 @@ and errors into this stable API.
 
 ```http
 POST /functions/v1/chat
-Authorization: Bearer <supabase-user-token>
+apikey: <supabase-publishable-key>
 Content-Type: application/json
 ```
 
-The endpoint requires an authenticated Supabase user. Requests using any HTTP
-method other than `POST` are rejected.
+The endpoint requires the Supabase project's publishable key. The key identifies
+the calling Supabase project but does not authenticate or identify an end user.
+Requests using any HTTP method other than `POST` are rejected.
+
+The publishable key is safe to include in the iOS application and must not be
+treated as a secret. Supabase secret keys and the OpenAI API key must never be
+included in the client or accepted as client credentials by this endpoint.
 
 ## Request
 
@@ -143,19 +148,33 @@ may be recorded in server logs but are not a replacement for the backend
 | HTTP status | Code | Meaning |
 | ---: | --- | --- |
 | `400` | `invalid_request` | The JSON is malformed or a field is missing or invalid. |
-| `401` | `unauthenticated` | The user session is missing or invalid. |
+| `401` | `invalid_api_key` | The Supabase publishable key is missing or invalid. |
 | `405` | `method_not_allowed` | The request did not use `POST`. |
 | `413` | `input_too_large` | The input exceeds the backend's configured limit. |
 | `422` | `unsupported_provider` | The provider identifier is valid but unsupported. |
 | `422` | `unsupported_model` | The provider is supported, but the model is not supported by it. |
 | `422` | `invalid_continuation` | The continuation cannot be used with this request. |
-| `429` | `rate_limited` | The user exceeded an application quota. |
+| `429` | `rate_limited` | The caller or application exceeded a configured quota. |
 | `502` | `provider_error` | The upstream provider rejected or failed the request. |
 | `503` | `service_unavailable` | The backend is temporarily unavailable. |
 | `504` | `provider_timeout` | The upstream provider did not respond in time. |
 
 Every error response, including unexpected server failures, must use the common
 error envelope whenever the backend is able to produce a response.
+
+## Security Model
+
+The publishable key is a project identifier, not a user credential or a secret.
+Anyone who obtains it can attempt to invoke the endpoint. This v1 tradeoff keeps
+the personal-development client simple and is not intended to provide per-user
+authorization or abuse prevention.
+
+The backend must compensate by allowlisting provider and model combinations,
+limiting request sizes, and relying on conservative upstream budgets and usage
+alerts. Authentication can be upgraded to Supabase user sessions in a future
+contract version before broader distribution. The endpoint must accept only
+publishable client credentials; Supabase secret keys remain restricted to
+trusted server-to-server operations.
 
 ## Example: Unsupported Provider
 
