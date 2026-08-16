@@ -10,7 +10,7 @@ nonisolated protocol OpenAIResponseCreating: Sendable {
 	func createResponse(
 		model: String,
 		input: String,
-        previousResponseId: String?
+		previousResponseId: String?
 	) async throws -> OpenAIResponse
 }
 

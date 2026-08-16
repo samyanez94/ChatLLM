@@ -53,7 +53,7 @@ struct OpenAIClientTests {
 		_ = try await client.createResponse(
 			model: OpenAIModelCatalog.lunaId,
 			input: "Continue",
-            previousResponseId: "resp_previous"
+			previousResponseId: "resp_previous"
 		)
 
 		let request = await session.lastRequest

@@ -8,9 +8,9 @@
 /// Maintains one GPT-5.6 Luna conversation using the OpenAI Responses API.
 final class OpenAIChatService: ChatProviding {
 	private let client: any OpenAIResponseCreating
-    
+
 	private var previousResponseId: String?
-    
+
 	private var isGenerating = false
 
 	/// Information about GPT-5.6 Luna for the current OpenAI configuration.
@@ -53,9 +53,9 @@ final class OpenAIChatService: ChatProviding {
 		let response = try await client.createResponse(
 			model: model.id,
 			input: message,
-            previousResponseId: previousResponseId
+			previousResponseId: previousResponseId
 		)
-        previousResponseId = response.id
+		previousResponseId = response.id
 		return response.outputText
 	}
 }
