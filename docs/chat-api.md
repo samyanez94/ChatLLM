@@ -138,6 +138,11 @@ All errors use the same envelope:
 
 Clients must make decisions using `error.code`, not `error.message`.
 
+The Supabase gateway validates the `apikey` header before the Chat API handler
+runs. A missing or invalid publishable key therefore uses Supabase's gateway
+error envelope rather than the Chat API envelope. Clients must treat any `401`
+response as `invalid_api_key` regardless of the response body.
+
 The backend must not expose provider credentials, raw upstream response bodies,
 stack traces, or other sensitive implementation details. Provider request IDs
 may be recorded in server logs but are not a replacement for the backend
@@ -148,7 +153,7 @@ may be recorded in server logs but are not a replacement for the backend
 | HTTP status | Code | Meaning |
 | ---: | --- | --- |
 | `400` | `invalid_request` | The JSON is malformed or a field is missing or invalid. |
-| `401` | `invalid_api_key` | The Supabase publishable key is missing or invalid. |
+| `401` | `invalid_api_key` | The Supabase publishable key is missing or invalid. The response body may use Supabase's gateway error format. |
 | `405` | `method_not_allowed` | The request did not use `POST`. |
 | `413` | `input_too_large` | The input exceeds the backend's configured limit. |
 | `422` | `unsupported_provider` | The provider identifier is valid but unsupported. |
