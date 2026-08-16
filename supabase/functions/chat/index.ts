@@ -1,46 +1,83 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
-// Setup type definitions for built-in Supabase Runtime APIs
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+import { parseChatRequest } from "../_shared/chat_request.ts";
+import type { ChatResponse } from "../_shared/chat_response.ts";
+import { ChatAPIError, makeErrorResponse } from "../_shared/errors.ts";
+import {
+  isSupportedModel,
+  isSupportedProvider,
+} from "../_shared/models.ts";
+import { createOpenAIResponse } from "../_shared/providers/openai.ts";
 
-console.log("Hello from Functions!");
-
-// This endpoint uses 'publishable' | 'secret' access, apiKey is required.
-// Use publishable for Client-facing, key-validated endpoints
-// Use secret for Server-to-server, internal calls
 export default {
-  fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
-    // Called by another service with a secret key
-    // ctx.supabaseAdmin bypasses RLS — use for privileged operations
-    /*
-    if (ctx.authMode === "secret") {
-      const { user_id } = await req.json();
-      const { data } = await ctx.supabaseAdmin.auth.admin.getUserById(user_id);
+  fetch: withSupabase({ auth: "publishable" }, async (request) => {
+    const requestId = crypto.randomUUID();
 
-      return Response.json({
-        email: data?.user?.email,
+    try {
+      if (request.method !== "POST") {
+        return makeErrorResponse(
+          new ChatAPIError(
+            "method_not_allowed",
+            "Only POST requests are supported.",
+          ),
+          requestId,
+          { Allow: "POST" },
+        );
+      }
+
+      const requestBody = await parseJSON(request);
+      const chatRequest = parseChatRequest(requestBody);
+
+      if (!isSupportedProvider(chatRequest.provider)) {
+        throw new ChatAPIError(
+          "unsupported_provider",
+          `Provider '${chatRequest.provider}' is not supported.`,
+        );
+      }
+      if (!isSupportedModel(chatRequest.provider, chatRequest.model)) {
+        throw new ChatAPIError(
+          "unsupported_model",
+          `Model '${chatRequest.model}' is not supported by provider '${chatRequest.provider}'.`,
+        );
+      }
+
+      const providerResponse = await createOpenAIResponse(
+        chatRequest,
+        requestId,
+      );
+      const response: ChatResponse = {
+        provider: chatRequest.provider,
+        model: chatRequest.model,
+        continuation_id: providerResponse.id,
+        output_text: providerResponse.outputText,
+      };
+      return Response.json(response, {
+        headers: { "X-Request-Id": requestId },
       });
+    } catch (error) {
+      if (error instanceof ChatAPIError) {
+        return makeErrorResponse(error, requestId);
+      }
+
+      console.error("Unexpected chat request failure", { requestId, error });
+      return makeErrorResponse(
+        new ChatAPIError(
+          "internal_error",
+          "The chat service encountered an unexpected failure.",
+        ),
+        requestId,
+      );
     }
-    */
-
-    const { name } = await req.json();
-
-    return Response.json({
-      message: `Hello ${name}!`,
-    });
   }),
 };
 
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/chat' \
-    --header 'apiKey: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH' \
-    --data '{"name":"Functions"}'
-
-*/
+async function parseJSON(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ChatAPIError(
+      "invalid_request",
+      "The request body must contain valid JSON.",
+    );
+  }
+}

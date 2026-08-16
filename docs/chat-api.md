@@ -45,8 +45,8 @@ Unknown fields may be ignored for forward compatibility. Missing fields,
 incorrect field types, empty identifiers, and empty or whitespace-only input
 produce an `invalid_request` error.
 
-The server may impose a maximum input size. An input exceeding that limit
-produces an `input_too_large` error.
+The v1 maximum input size is 32 KiB (32,768 bytes) when encoded as UTF-8. An
+input exceeding that limit produces an `input_too_large` error.
 
 ## Success Response
 
@@ -155,6 +155,7 @@ may be recorded in server logs but are not a replacement for the backend
 | `422` | `unsupported_model` | The provider is supported, but the model is not supported by it. |
 | `422` | `invalid_continuation` | The continuation cannot be used with this request. |
 | `429` | `rate_limited` | The caller or application exceeded a configured quota. |
+| `500` | `internal_error` | The backend encountered an unexpected failure. |
 | `502` | `provider_error` | The upstream provider rejected or failed the request. |
 | `503` | `service_unavailable` | The backend is temporarily unavailable. |
 | `504` | `provider_timeout` | The upstream provider did not respond in time. |
