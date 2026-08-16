@@ -1,0 +1,221 @@
+# Chat API Contract
+
+Version: v1
+
+This document defines the contract between the ChatApp iOS client and the
+ChatApp backend. The backend owns provider credentials, validates supported
+provider and model combinations, and translates provider-specific responses
+and errors into this stable API.
+
+## Endpoint
+
+```http
+POST /functions/v1/chat
+Authorization: Bearer <supabase-user-token>
+Content-Type: application/json
+```
+
+The endpoint requires an authenticated Supabase user. Requests using any HTTP
+method other than `POST` are rejected.
+
+## Request
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.6-luna",
+  "input": "Hello",
+  "continuation_id": "resp_123"
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `provider` | string | Yes | Stable provider identifier. Only `openai` is supported in v1. |
+| `model` | string | Yes | Provider-specific model identifier selected by the client. |
+| `input` | string | Yes | Non-empty user message. Whitespace-only input is invalid. |
+| `continuation_id` | string | No | Opaque identifier returned by the previous successful response. |
+
+Unknown fields may be ignored for forward compatibility. Missing fields,
+incorrect field types, empty identifiers, and empty or whitespace-only input
+produce an `invalid_request` error.
+
+The server may impose a maximum input size. An input exceeding that limit
+produces an `input_too_large` error.
+
+## Success Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.6-luna",
+  "continuation_id": "resp_456",
+  "output_text": "Hi! How can I help?"
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `provider` | string | Provider that generated the response. |
+| `model` | string | Model that generated the response. |
+| `continuation_id` | string | Opaque identifier to include in the next request in this conversation. |
+| `output_text` | string | Generated assistant response. |
+
+The returned `provider` and `model` must match the accepted request.
+
+## Provider and Model Validation
+
+The client selects both `provider` and `model`. The backend is authoritative
+about which provider and model combinations are supported.
+
+The backend validates requests in this order:
+
+1. Validate the request shape and input constraints.
+2. Confirm that the provider is supported.
+3. Confirm that the model is supported by that provider.
+4. Validate the continuation, when one is supplied.
+5. Invoke the selected provider adapter.
+
+In v1, the supported catalog is equivalent to:
+
+```ts
+const supportedModels = {
+  openai: new Set([
+    "gpt-5.6-luna",
+  ]),
+} as const
+```
+
+An unknown provider produces `unsupported_provider`. A known provider paired
+with an unsupported model produces `unsupported_model`. Unsupported requests
+must be rejected before calling the upstream provider.
+
+## Continuations
+
+`continuation_id` is opaque to the client. The client must not parse, modify,
+or manufacture it.
+
+A continuation is valid only for the conversation, provider, and model that
+produced it. The client must begin a new conversation when the selected
+provider or model changes.
+
+For OpenAI, the backend may map `continuation_id` to OpenAI's
+`previous_response_id`. Future provider adapters may interpret continuations
+differently without changing the public API contract.
+
+If a continuation is expired, malformed, unknown, or incompatible with the
+requested provider or model, the backend returns `invalid_continuation`.
+
+## Error Response
+
+All errors use the same envelope:
+
+```json
+{
+  "error": {
+    "code": "unsupported_model",
+    "message": "Model 'example-model' is not supported by provider 'openai'.",
+    "request_id": "7E22C711-35EB-4511-92AF-A5DB55BD4C77"
+  }
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `error.code` | string | Stable, machine-readable error code. |
+| `error.message` | string | Safe, human-readable explanation. Not intended for program logic. |
+| `error.request_id` | string | Backend-generated identifier for tracing and support. |
+
+Clients must make decisions using `error.code`, not `error.message`.
+
+The backend must not expose provider credentials, raw upstream response bodies,
+stack traces, or other sensitive implementation details. Provider request IDs
+may be recorded in server logs but are not a replacement for the backend
+`request_id`.
+
+## Error Codes
+
+| HTTP status | Code | Meaning |
+| ---: | --- | --- |
+| `400` | `invalid_request` | The JSON is malformed or a field is missing or invalid. |
+| `401` | `unauthenticated` | The user session is missing or invalid. |
+| `405` | `method_not_allowed` | The request did not use `POST`. |
+| `413` | `input_too_large` | The input exceeds the backend's configured limit. |
+| `422` | `unsupported_provider` | The provider identifier is valid but unsupported. |
+| `422` | `unsupported_model` | The provider is supported, but the model is not supported by it. |
+| `422` | `invalid_continuation` | The continuation cannot be used with this request. |
+| `429` | `rate_limited` | The user exceeded an application quota. |
+| `502` | `provider_error` | The upstream provider rejected or failed the request. |
+| `503` | `service_unavailable` | The backend is temporarily unavailable. |
+| `504` | `provider_timeout` | The upstream provider did not respond in time. |
+
+Every error response, including unexpected server failures, must use the common
+error envelope whenever the backend is able to produce a response.
+
+## Example: Unsupported Provider
+
+Request:
+
+```json
+{
+  "provider": "example-provider",
+  "model": "example-model",
+  "input": "Hello"
+}
+```
+
+Response:
+
+```http
+HTTP/1.1 422 Unprocessable Content
+```
+
+```json
+{
+  "error": {
+    "code": "unsupported_provider",
+    "message": "Provider 'example-provider' is not supported.",
+    "request_id": "780AC32F-E655-4994-A97C-A44C523E5518"
+  }
+}
+```
+
+## Example: Unsupported Model
+
+Request:
+
+```json
+{
+  "provider": "openai",
+  "model": "example-model",
+  "input": "Hello"
+}
+```
+
+Response:
+
+```http
+HTTP/1.1 422 Unprocessable Content
+```
+
+```json
+{
+  "error": {
+    "code": "unsupported_model",
+    "message": "Model 'example-model' is not supported by provider 'openai'.",
+    "request_id": "7E22C711-35EB-4511-92AF-A5DB55BD4C77"
+  }
+}
+```
+
+## Versioning
+
+This is version `v1` of the contract. Backward-compatible additions may be made
+without changing the version, including adding optional response fields, error
+codes, providers, or models. Removing or renaming fields, changing field types,
+or changing existing field semantics requires a new contract version.
