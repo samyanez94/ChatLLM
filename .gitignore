@@ -33,6 +33,7 @@ playground.xcworkspace
 .build/
 
 # Local credentials
+ChatApp/Configuration/ChatLLMConfiguration.plist
 ChatApp/Configuration/OpenAISecrets.plist
 
 # CocoaPods
