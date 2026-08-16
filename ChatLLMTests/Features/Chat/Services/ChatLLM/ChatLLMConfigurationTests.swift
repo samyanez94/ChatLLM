@@ -1,6 +1,6 @@
 //
 //  ChatLLMConfigurationTests.swift
-//  ChatAppTests
+//  ChatLLMTests
 //
 //  Created by Samuel Yanez on 8/16/26.
 //
@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 
-@testable import ChatApp
+@testable import ChatLLM
 
 struct ChatLLMConfigurationTests {
 	@Test("Valid hosted configuration is accepted")

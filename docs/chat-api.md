@@ -2,8 +2,8 @@
 
 Version: v1
 
-This document defines the contract between the ChatApp iOS client and the
-ChatApp backend. The backend owns provider credentials, validates supported
+This document defines the contract between the ChatLLM iOS client and the
+ChatLLM backend. The backend owns provider credentials, validates supported
 provider and model combinations, and translates provider-specific responses
 and errors into this stable API.
 

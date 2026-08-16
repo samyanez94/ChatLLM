@@ -12,24 +12,24 @@
 			containerPortal = 919237B8302FA64F0026C317 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 919237BF302FA64F0026C317;
-			remoteInfo = ChatApp;
+			remoteInfo = ChatLLM;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		919237C0302FA64F0026C317 /* ChatApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChatApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		919237CD302FA6500026C317 /* ChatAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChatAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		919237C0302FA64F0026C317 /* ChatLLM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChatLLM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		919237CD302FA6500026C317 /* ChatLLMTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChatLLMTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		919237C2302FA64F0026C317 /* ChatApp */ = {
+		919237C2302FA64F0026C317 /* ChatLLM */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ChatApp;
+			path = ChatLLM;
 			sourceTree = "<group>";
 		};
-		919237D0302FA6500026C317 /* ChatAppTests */ = {
+		919237D0302FA6500026C317 /* ChatLLMTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ChatAppTests;
+			path = ChatLLMTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -55,8 +55,8 @@
 		919237B7302FA64F0026C317 = {
 			isa = PBXGroup;
 			children = (
-				919237C2302FA64F0026C317 /* ChatApp */,
-				919237D0302FA6500026C317 /* ChatAppTests */,
+				919237C2302FA64F0026C317 /* ChatLLM */,
+				919237D0302FA6500026C317 /* ChatLLMTests */,
 				919237C1302FA64F0026C317 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,8 +64,8 @@
 		919237C1302FA64F0026C317 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				919237C0302FA64F0026C317 /* ChatApp.app */,
-				919237CD302FA6500026C317 /* ChatAppTests.xctest */,
+				919237C0302FA64F0026C317 /* ChatLLM.app */,
+				919237CD302FA6500026C317 /* ChatLLMTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,9 +73,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		919237BF302FA64F0026C317 /* ChatApp */ = {
+		919237BF302FA64F0026C317 /* ChatLLM */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 919237E1302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatApp" */;
+			buildConfigurationList = 919237E1302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatLLM" */;
 			buildPhases = (
 				919237BC302FA64F0026C317 /* Sources */,
 				919237BD302FA64F0026C317 /* Frameworks */,
@@ -86,18 +86,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				919237C2302FA64F0026C317 /* ChatApp */,
+				919237C2302FA64F0026C317 /* ChatLLM */,
 			);
-			name = ChatApp;
+			name = ChatLLM;
 			packageProductDependencies = (
 			);
-			productName = ChatApp;
-			productReference = 919237C0302FA64F0026C317 /* ChatApp.app */;
+			productName = ChatLLM;
+			productReference = 919237C0302FA64F0026C317 /* ChatLLM.app */;
 			productType = "com.apple.product-type.application";
 		};
-		919237CC302FA6500026C317 /* ChatAppTests */ = {
+		919237CC302FA6500026C317 /* ChatLLMTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 919237E4302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatAppTests" */;
+			buildConfigurationList = 919237E4302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatLLMTests" */;
 			buildPhases = (
 				919237C9302FA6500026C317 /* Sources */,
 				919237CA302FA6500026C317 /* Frameworks */,
@@ -109,13 +109,13 @@
 				919237CF302FA6500026C317 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				919237D0302FA6500026C317 /* ChatAppTests */,
+				919237D0302FA6500026C317 /* ChatLLMTests */,
 			);
-			name = ChatAppTests;
+			name = ChatLLMTests;
 			packageProductDependencies = (
 			);
-			productName = ChatAppTests;
-			productReference = 919237CD302FA6500026C317 /* ChatAppTests.xctest */;
+			productName = ChatLLMTests;
+			productReference = 919237CD302FA6500026C317 /* ChatLLMTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -137,7 +137,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 919237BB302FA64F0026C317 /* Build configuration list for PBXProject "ChatApp" */;
+			buildConfigurationList = 919237BB302FA64F0026C317 /* Build configuration list for PBXProject "ChatLLM" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -151,8 +151,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				919237BF302FA64F0026C317 /* ChatApp */,
-				919237CC302FA6500026C317 /* ChatAppTests */,
+				919237BF302FA64F0026C317 /* ChatLLM */,
+				919237CC302FA6500026C317 /* ChatLLMTests */,
 			);
 		};
 /* End PBXProject section */
@@ -194,7 +194,7 @@
 /* Begin PBXTargetDependency section */
 		919237CF302FA6500026C317 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 919237BF302FA64F0026C317 /* ChatApp */;
+			target = 919237BF302FA64F0026C317 /* ChatLLM */;
 			targetProxy = 919237CE302FA6500026C317 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -341,7 +341,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatLLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -373,7 +373,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatLLM;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -395,7 +395,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatLLMTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -403,7 +403,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChatApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChatApp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChatLLM.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChatLLM";
 			};
 			name = Debug;
 		};
@@ -417,7 +417,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuel.ChatLLMTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -425,14 +425,14 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChatApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChatApp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChatLLM.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChatLLM";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		919237BB302FA64F0026C317 /* Build configuration list for PBXProject "ChatApp" */ = {
+		919237BB302FA64F0026C317 /* Build configuration list for PBXProject "ChatLLM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				919237DF302FA6500026C317 /* Debug */,
@@ -441,7 +441,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		919237E1302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatApp" */ = {
+		919237E1302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatLLM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				919237E2302FA6500026C317 /* Debug */,
@@ -450,7 +450,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		919237E4302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatAppTests" */ = {
+		919237E4302FA6500026C317 /* Build configuration list for PBXNativeTarget "ChatLLMTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				919237E5302FA6500026C317 /* Debug */,

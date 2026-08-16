@@ -1,6 +1,6 @@
 //
 //  ChatLLMChatService.swift
-//  ChatApp
+//  ChatLLM
 //
 //  Created by Samuel Yanez on 8/16/26.
 //

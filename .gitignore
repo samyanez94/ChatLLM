@@ -33,7 +33,7 @@ playground.xcworkspace
 .build/
 
 # Local credentials
-ChatApp/Configuration/ChatLLMConfiguration.plist
+ChatLLM/Configuration/ChatLLMConfiguration.plist
 
 # CocoaPods
 #

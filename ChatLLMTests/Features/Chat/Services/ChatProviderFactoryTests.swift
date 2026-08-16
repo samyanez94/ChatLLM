@@ -1,13 +1,13 @@
 //
 //  ChatProviderFactoryTests.swift
-//  ChatAppTests
+//  ChatLLMTests
 //
 //  Created by Samuel Yanez on 8/15/26.
 //
 
 import Testing
 
-@testable import ChatApp
+@testable import ChatLLM
 
 @MainActor
 struct ChatProviderFactoryTests {
