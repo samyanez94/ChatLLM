@@ -34,7 +34,6 @@ playground.xcworkspace
 
 # Local credentials
 ChatApp/Configuration/ChatLLMConfiguration.plist
-ChatApp/Configuration/OpenAISecrets.plist
 
 # CocoaPods
 #
