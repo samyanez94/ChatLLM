@@ -6,17 +6,17 @@
 
 /// Creates providers for the language models supported by the app.
 struct ChatProviderFactory: ChatProviderCreating {
-	private let openAIConfiguration: OpenAIConfiguration
+	private let chatLLMConfiguration: ChatLLMConfiguration?
 
-	init(openAIConfiguration: OpenAIConfiguration = OpenAIConfiguration()) {
-		self.openAIConfiguration = openAIConfiguration
+	init(chatLLMConfiguration: ChatLLMConfiguration? = ChatLLMConfiguration()) {
+		self.chatLLMConfiguration = chatLLMConfiguration
 	}
 
 	/// The models supported by the app.
 	var models: [ChatModel] {
 		[
 			FoundationModelsChatService().model,
-			OpenAIModelCatalog.luna(configuration: openAIConfiguration)
+			OpenAIModelCatalog.luna(isConfigured: chatLLMConfiguration != nil)
 		]
 	}
 
@@ -26,7 +26,7 @@ struct ChatProviderFactory: ChatProviderCreating {
 		case FoundationModelsChatService.modelID:
 			FoundationModelsChatService()
 		case OpenAIModelCatalog.lunaId:
-			OpenAIChatService(configuration: openAIConfiguration)
+			ChatLLMChatService(configuration: chatLLMConfiguration)
 		default:
 			nil
 		}

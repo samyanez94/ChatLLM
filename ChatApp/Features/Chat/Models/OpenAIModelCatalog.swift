@@ -10,25 +10,22 @@ enum OpenAIModelCatalog {
 	/// The stable OpenAI API identifier for GPT-5.6 Luna.
 	static let lunaId = "gpt-5.6-luna"
 
-	/// Creates the GPT-5.6 Luna model metadata for the current configuration.
-	/// - Parameter configuration: The local OpenAI credential configuration.
-	static func luna(
-		configuration: OpenAIConfiguration = OpenAIConfiguration()
-	) -> ChatModel {
+	/// Creates GPT-5.6 Luna metadata for the current backend configuration.
+	static func luna(isConfigured: Bool = ChatLLMConfiguration() != nil) -> ChatModel {
 		ChatModel(
 			id: lunaId,
 			displayName: "GPT-5.6 Luna",
 			providerName: "OpenAI",
-			availability: availability(for: configuration)
+			availability: availability(isConfigured: isConfigured)
 		)
 	}
 
 	private static func availability(
-		for configuration: OpenAIConfiguration
+		isConfigured: Bool
 	) -> ChatModelAvailability {
-		guard configuration.apiKey != nil else {
+		guard isConfigured else {
 			return .unavailable(
-				message: "Add an OpenAI API key to use this model."
+				message: "Add the ChatLLM backend configuration to use this model."
 			)
 		}
 		return .available

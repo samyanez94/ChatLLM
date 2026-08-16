@@ -8,7 +8,7 @@
 import Foundation
 
 /// Sends provider-neutral requests to the hosted ChatLLM API.
-nonisolated struct ChatLLMClient: Sendable {
+nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
 	private let configuration: ChatLLMConfiguration
 	private let session: any URLSessionDataLoading
 

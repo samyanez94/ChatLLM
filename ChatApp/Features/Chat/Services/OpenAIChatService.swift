@@ -23,7 +23,7 @@ final class OpenAIChatService: ChatProviding {
 			return nil
 		}
 		self.client = OpenAIClient(apiKey: apiKey)
-		self.model = OpenAIModelCatalog.luna(configuration: configuration)
+		self.model = OpenAIModelCatalog.luna(isConfigured: true)
 	}
 
 	/// Creates an OpenAI conversation with an injected response client.
@@ -32,9 +32,7 @@ final class OpenAIChatService: ChatProviding {
 	///   - model: GPT-5.6 Luna metadata for this conversation.
 	init(
 		client: any OpenAIResponseCreating,
-		model: ChatModel = OpenAIModelCatalog.luna(
-			configuration: OpenAIConfiguration(apiKey: "injected-client")
-		)
+		model: ChatModel = OpenAIModelCatalog.luna(isConfigured: true)
 	) {
 		self.client = client
 		self.model = model
