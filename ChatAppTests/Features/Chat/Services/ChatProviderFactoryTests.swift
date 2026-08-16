@@ -11,55 +11,65 @@ import Testing
 
 @MainActor
 struct ChatProviderFactoryTests {
-	@Test("The model catalog includes GPT-5.6 Luna")
-	func includesLuna() throws {
+	@Test("The model catalog includes the GPT-5.6 family")
+	func includesOpenAIModels() throws {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
 
-		let luna = try #require(
-			factory.models.first { $0.id == OpenAIModelCatalog.lunaId }
+		let openAIModels = factory.models.filter { $0.providerName == "OpenAI" }
+
+		#expect(openAIModels.map(\.id) == OpenAIModelCatalog.modelIds)
+		#expect(
+			openAIModels.map(\.displayName)
+				== ["GPT-5.6 Luna", "GPT-5.6 Terra", "GPT-5.6 Sol"]
 		)
-		#expect(luna.displayName == "GPT-5.6 Luna")
-		#expect(luna.providerName == "OpenAI")
-		#expect(luna.availability.isAvailable)
+		#expect(openAIModels.allSatisfy { $0.availability.isAvailable })
 	}
 
-	@Test("Luna remains listed but unavailable without credentials")
-	func unavailableWithoutCredentials() throws {
+	@Test("OpenAI models remain listed but unavailable without configuration")
+	func unavailableWithoutConfiguration() {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: nil
 		)
 
-		let luna = try #require(
-			factory.models.first { $0.id == OpenAIModelCatalog.lunaId }
-		)
-		#expect(luna.availability.isAvailable == false)
+		let openAIModels = factory.models.filter { $0.providerName == "OpenAI" }
+
+		#expect(openAIModels.count == OpenAIModelCatalog.modelIds.count)
+		#expect(openAIModels.allSatisfy { $0.availability.isAvailable == false })
 		#expect(
-			luna.availability.unavailableMessage
-				== "Add the ChatLLM backend configuration to use this model."
+			openAIModels.allSatisfy {
+				$0.availability.unavailableMessage
+					== "Add the ChatLLM backend configuration to use this model."
+			}
 		)
 	}
 
-	@Test("The factory creates a ChatLLM provider when configuration is available")
-	func createsLunaProvider() throws {
+	@Test(
+		"The factory creates each OpenAI provider when configured",
+		arguments: OpenAIModelCatalog.modelIds
+	)
+	func createsOpenAIProvider(modelId: ChatModel.ID) throws {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
 
-		let provider = try #require(factory.makeProvider(for: OpenAIModelCatalog.lunaId))
+		let provider = try #require(factory.makeProvider(for: modelId))
 
 		#expect(provider is ChatLLMChatService)
-		#expect(provider.model.id == OpenAIModelCatalog.lunaId)
+		#expect(provider.model.id == modelId)
 	}
 
-	@Test("The factory does not create a Luna provider without credentials")
-	func rejectsLunaWithoutCredentials() {
+	@Test(
+		"The factory rejects each OpenAI provider without configuration",
+		arguments: OpenAIModelCatalog.modelIds
+	)
+	func rejectsOpenAIProviderWithoutConfiguration(modelId: ChatModel.ID) {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: nil
 		)
 
-		let provider = factory.makeProvider(for: OpenAIModelCatalog.lunaId)
+		let provider = factory.makeProvider(for: modelId)
 
 		#expect(provider == nil)
 	}

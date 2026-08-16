@@ -1,5 +1,7 @@
 const openAIModels: ReadonlySet<string> = new Set([
   "gpt-5.6-luna",
+  "gpt-5.6-terra",
+  "gpt-5.6-sol",
 ]);
 
 /** Provider and model combinations accepted by the Chat API. */

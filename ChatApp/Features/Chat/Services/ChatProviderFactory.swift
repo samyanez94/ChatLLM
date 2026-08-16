@@ -14,21 +14,26 @@ struct ChatProviderFactory: ChatProviderCreating {
 
 	/// The models supported by the app.
 	var models: [ChatModel] {
-		[
-			FoundationModelsChatService().model,
-			OpenAIModelCatalog.luna(isConfigured: chatLLMConfiguration != nil)
-		]
+		[FoundationModelsChatService().model]
+			+ OpenAIModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
 	}
 
 	/// Creates a fresh provider session for a supported model.
 	func makeProvider(for modelID: ChatModel.ID) -> (any ChatProviding)? {
-		switch modelID {
-		case FoundationModelsChatService.modelID:
-			FoundationModelsChatService()
-		case OpenAIModelCatalog.lunaId:
-			ChatLLMChatService(configuration: chatLLMConfiguration)
-		default:
-			nil
+		if modelID == FoundationModelsChatService.modelID {
+			return FoundationModelsChatService()
 		}
+		guard
+			let model = OpenAIModelCatalog.model(
+				withId: modelID,
+				isConfigured: chatLLMConfiguration != nil
+			)
+		else {
+			return nil
+		}
+		return ChatLLMChatService(
+			configuration: chatLLMConfiguration,
+			model: model
+		)
 	}
 }

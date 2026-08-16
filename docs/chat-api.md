@@ -92,6 +92,8 @@ In v1, the supported catalog is equivalent to:
 const supportedModels = {
   openai: new Set([
     "gpt-5.6-luna",
+    "gpt-5.6-terra",
+    "gpt-5.6-sol",
   ]),
 } as const
 ```

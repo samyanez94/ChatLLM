@@ -11,12 +11,20 @@ import Testing
 
 @MainActor
 struct ChatLLMChatServiceTests {
-	@Test("The first reply uses OpenAI without a continuation identifier")
-	func firstReply() async throws {
+	@Test(
+		"The first reply forwards the selected OpenAI model",
+		arguments: OpenAIModelCatalog.modelIds
+	)
+	func firstReply(modelId: ChatModel.ID) async throws {
 		let client = StubChatLLMClient(
-			responses: [makeResponse(id: "response-1", text: "First reply")]
+			responses: [
+				makeResponse(id: "response-1", text: "First reply", modelId: modelId)
+			]
 		)
-		let service = ChatLLMChatService(client: client)
+		let service = ChatLLMChatService(
+			client: client,
+			model: try makeModel(id: modelId)
+		)
 
 		let reply = try await service.generateReply(to: "Hello")
 		let requests = await client.recordedRequests
@@ -26,7 +34,7 @@ struct ChatLLMChatServiceTests {
 			requests == [
 				.init(
 					provider: "openai",
-					model: OpenAIModelCatalog.lunaId,
+					model: modelId,
 					input: "Hello",
 					continuationId: nil
 				)
@@ -42,7 +50,10 @@ struct ChatLLMChatServiceTests {
 				makeResponse(id: "response-2", text: "Second reply")
 			]
 		)
-		let service = ChatLLMChatService(client: client)
+		let service = ChatLLMChatService(
+			client: client,
+			model: try makeModel()
+		)
 
 		_ = try await service.generateReply(to: "First")
 		let reply = try await service.generateReply(to: "Second")
@@ -61,7 +72,10 @@ struct ChatLLMChatServiceTests {
 				.success(makeResponse(id: "response-2", text: "Third reply"))
 			]
 		)
-		let service = ChatLLMChatService(client: client)
+		let service = ChatLLMChatService(
+			client: client,
+			model: try makeModel()
+		)
 
 		_ = try await service.generateReply(to: "First")
 		await #expect(throws: TestError.requestFailed) {
@@ -73,10 +87,20 @@ struct ChatLLMChatServiceTests {
 		#expect(requests.map(\.continuationId) == [nil, "response-1", "response-1"])
 	}
 
-	private func makeResponse(id: String, text: String) -> ChatLLMResponse {
+	private func makeModel(
+		id: ChatModel.ID = OpenAIModelCatalog.lunaId
+	) throws -> ChatModel {
+		try #require(OpenAIModelCatalog.model(withId: id, isConfigured: true))
+	}
+
+	private func makeResponse(
+		id: String,
+		text: String,
+		modelId: ChatModel.ID = OpenAIModelCatalog.lunaId
+	) -> ChatLLMResponse {
 		ChatLLMResponse(
 			provider: "openai",
-			model: OpenAIModelCatalog.lunaId,
+			model: modelId,
 			continuationId: id,
 			outputText: text,
 			requestId: nil
