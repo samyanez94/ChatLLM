@@ -65,6 +65,7 @@ enum OpenAIModelCatalog {
 		ChatModel(
 			id: id,
 			displayName: displayName,
+			providerId: providerId,
 			providerName: "OpenAI",
 			summary: summary,
 			availability: availability(isConfigured: isConfigured)

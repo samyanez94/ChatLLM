@@ -29,6 +29,7 @@ struct ChatHeaderView: View {
 		model: ChatModel(
 			id: "preview-model",
 			displayName: "Apple Foundation Model",
+			providerId: "apple",
 			providerName: "Apple",
 			summary: "Private, on-device responses for everyday tasks.",
 			availability: .available

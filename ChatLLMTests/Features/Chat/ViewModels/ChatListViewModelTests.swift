@@ -37,6 +37,7 @@ private final class StubChatProvider: ChatProviding {
 	let model = ChatModel(
 		id: "test-model",
 		displayName: "Test Model",
+		providerId: "test-provider",
 		providerName: "Test Provider",
 		summary: "A model used in tests.",
 		availability: .available
@@ -57,7 +58,8 @@ private struct StubChatProviderFactory: ChatProviderCreating {
 		[provider.model]
 	}
 
-	func makeProvider(for modelID: ChatModel.ID) -> (any ChatProviding)? {
-		modelID == provider.model.id ? provider : nil
+	func makeProvider(for model: ChatModel) -> (any ChatProviding)? {
+		model.providerId == provider.model.providerId && model.id == provider.model.id
+			? provider : nil
 	}
 }

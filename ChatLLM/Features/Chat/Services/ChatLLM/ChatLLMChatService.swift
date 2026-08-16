@@ -46,7 +46,7 @@ final class ChatLLMChatService: ChatProviding {
 		}
 
 		let response = try await client.createResponse(
-			provider: OpenAIModelCatalog.providerId,
+			provider: model.providerId,
 			model: model.id,
 			input: message,
 			continuationId: continuationId

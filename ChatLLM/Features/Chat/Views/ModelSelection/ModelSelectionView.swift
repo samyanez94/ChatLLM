@@ -15,9 +15,9 @@ struct ModelSelectionView: View {
 	var body: some View {
 		NavigationStack {
 			List {
-				ForEach(providerNames, id: \.self) { providerName in
-					Section(providerName) {
-						ForEach(models(for: providerName)) { model in
+				ForEach(providerIds, id: \.self) { providerId in
+					Section(providerName(for: providerId)) {
+						ForEach(models(for: providerId)) { model in
 							Button {
 								selectModel(model)
 							} label: {
@@ -40,17 +40,21 @@ struct ModelSelectionView: View {
 		}
 	}
 
-	private var providerNames: [String] {
-		models.reduce(into: []) { providerNames, model in
-			guard providerNames.contains(model.providerName) == false else {
+	private var providerIds: [String] {
+		models.reduce(into: []) { providerIds, model in
+			guard providerIds.contains(model.providerId) == false else {
 				return
 			}
-			providerNames.append(model.providerName)
+			providerIds.append(model.providerId)
 		}
 	}
 
-	private func models(for providerName: String) -> [ChatModel] {
-		models.filter { $0.providerName == providerName }
+	private func providerName(for providerId: String) -> String {
+		models.first { $0.providerId == providerId }?.providerName ?? providerId
+	}
+
+	private func models(for providerId: String) -> [ChatModel] {
+		models.filter { $0.providerId == providerId }
 	}
 }
 

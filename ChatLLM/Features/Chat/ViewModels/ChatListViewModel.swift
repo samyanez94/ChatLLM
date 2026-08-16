@@ -40,7 +40,7 @@ final class ChatListViewModel {
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
 	func createChat(using model: ChatModel) -> ChatViewModel? {
 		guard model.availability.isAvailable,
-			let provider = providerFactory.makeProvider(for: model.id),
+			let provider = providerFactory.makeProvider(for: model),
 			provider.model.availability.isAvailable
 		else {
 			return nil

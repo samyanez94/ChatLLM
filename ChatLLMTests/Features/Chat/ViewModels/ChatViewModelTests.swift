@@ -73,6 +73,7 @@ private final class StubChatProvider: ChatProviding {
 	let model = ChatModel(
 		id: "test-model",
 		displayName: "Test Model",
+		providerId: "test-provider",
 		providerName: "Test Provider",
 		summary: "A model used in tests.",
 		availability: .available

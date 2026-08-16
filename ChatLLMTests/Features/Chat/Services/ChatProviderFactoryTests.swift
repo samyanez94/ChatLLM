@@ -17,9 +17,12 @@ struct ChatProviderFactoryTests {
 			chatLLMConfiguration: try makeConfiguration()
 		)
 
-		let openAIModels = factory.models.filter { $0.providerName == "OpenAI" }
+		let openAIModels = factory.models.filter {
+			$0.providerId == OpenAIModelCatalog.providerId
+		}
 
 		#expect(openAIModels.map(\.id) == OpenAIModelCatalog.modelIds)
+		#expect(openAIModels.allSatisfy { $0.providerName == "OpenAI" })
 		#expect(
 			openAIModels.map(\.displayName)
 				== ["GPT-5.6 Luna", "GPT-5.6 Terra", "GPT-5.6 Sol"]
@@ -33,7 +36,9 @@ struct ChatProviderFactoryTests {
 			chatLLMConfiguration: nil
 		)
 
-		let openAIModels = factory.models.filter { $0.providerName == "OpenAI" }
+		let openAIModels = factory.models.filter {
+			$0.providerId == OpenAIModelCatalog.providerId
+		}
 
 		#expect(openAIModels.count == OpenAIModelCatalog.modelIds.count)
 		#expect(openAIModels.allSatisfy { $0.availability.isAvailable == false })
@@ -53,8 +58,9 @@ struct ChatProviderFactoryTests {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
+		let model = try #require(factory.models.first { $0.id == modelId })
 
-		let provider = try #require(factory.makeProvider(for: modelId))
+		let provider = try #require(factory.makeProvider(for: model))
 
 		#expect(provider is ChatLLMChatService)
 		#expect(provider.model.id == modelId)
@@ -68,8 +74,12 @@ struct ChatProviderFactoryTests {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: nil
 		)
+		guard let model = factory.models.first(where: { $0.id == modelId }) else {
+			Issue.record("Expected model '\(modelId)' in the catalog.")
+			return
+		}
 
-		let provider = factory.makeProvider(for: modelId)
+		let provider = factory.makeProvider(for: model)
 
 		#expect(provider == nil)
 	}
@@ -79,12 +89,15 @@ struct ChatProviderFactoryTests {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
+		let model = try #require(
+			factory.models.first { $0.id == OpenAIModelCatalog.lunaId }
+		)
 
 		let first = try #require(
-			factory.makeProvider(for: OpenAIModelCatalog.lunaId) as? ChatLLMChatService
+			factory.makeProvider(for: model) as? ChatLLMChatService
 		)
 		let second = try #require(
-			factory.makeProvider(for: OpenAIModelCatalog.lunaId) as? ChatLLMChatService
+			factory.makeProvider(for: model) as? ChatLLMChatService
 		)
 
 		#expect(first !== second)
@@ -95,8 +108,16 @@ struct ChatProviderFactoryTests {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
+		let model = ChatModel(
+			id: "unknown-model",
+			displayName: "Unknown",
+			providerId: OpenAIModelCatalog.providerId,
+			providerName: "OpenAI",
+			summary: "An unsupported model.",
+			availability: .available
+		)
 
-		#expect(factory.makeProvider(for: "unknown-model") == nil)
+		#expect(factory.makeProvider(for: model) == nil)
 	}
 
 	private func makeConfiguration() throws -> ChatLLMConfiguration {

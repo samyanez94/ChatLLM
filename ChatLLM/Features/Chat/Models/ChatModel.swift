@@ -12,6 +12,9 @@ struct ChatModel: Identifiable {
 	/// The user-facing name of the model.
 	let displayName: String
 
+	/// The stable identifier used to select the model provider.
+	let providerId: String
+
 	/// The user-facing name of the model provider.
 	let providerName: String
 

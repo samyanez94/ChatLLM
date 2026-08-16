@@ -10,7 +10,7 @@ protocol ChatProviderCreating {
 	var models: [ChatModel] { get }
 
 	/// Creates a fresh provider session for a model.
-	/// - Parameter modelID: The stable identifier of the requested model.
+	/// - Parameter model: The requested model and its stable provider identity.
 	/// - Returns: A provider for the model, or `nil` when the identifier is unsupported.
-	func makeProvider(for modelID: ChatModel.ID) -> (any ChatProviding)?
+	func makeProvider(for model: ChatModel) -> (any ChatProviding)?
 }
