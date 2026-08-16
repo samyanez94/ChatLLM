@@ -35,8 +35,34 @@ struct ChatViewModelTests {
 		await viewModel.sendMessage()
 
 		#expect(viewModel.messages.map(\.text) == ["Hello"])
-		#expect(viewModel.errorMessage != nil)
+		#expect(
+			viewModel.errorMessage
+				== "The response couldn’t be generated. Please try again."
+		)
 		#expect(viewModel.isResponding == false)
+	}
+
+	@Test("A backend error preserves its message and request identifier")
+	func preservesBackendError() async {
+		let apiError = ChatLLMAPIError(
+			code: "rate_limited",
+			message: "The provider rate limit has been exceeded.",
+			requestId: "request-123"
+		)
+		let provider = StubChatProvider(
+			result: .failure(
+				ChatLLMClientError.requestFailed(statusCode: 429, apiError: apiError)
+			)
+		)
+		let viewModel = ChatViewModel(provider: provider, messages: [])
+		viewModel.draft = "Hello"
+
+		await viewModel.sendMessage()
+
+		#expect(
+			viewModel.errorMessage
+				== "The provider rate limit has been exceeded.\n\nRequest ID: request-123"
+		)
 	}
 }
 
@@ -53,7 +79,7 @@ private final class StubChatProvider: ChatProviding {
 	)
 
 	private let result: Result<String, any Error>
-    
+
 	private(set) var receivedMessages: [String] = []
 
 	init(result: Result<String, any Error>) {

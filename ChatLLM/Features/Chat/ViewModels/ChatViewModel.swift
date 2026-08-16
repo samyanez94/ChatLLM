@@ -102,12 +102,31 @@ final class ChatViewModel: Identifiable {
 				ChatMessage(text: reply, role: .assistant)
 			)
 			updatedAt = .now
+		} catch is CancellationError {
+			return
 		} catch {
-			errorMessage = "The response couldn’t be generated. Please try again."
+			errorMessage = userFacingMessage(for: error)
 		}
 	}
 
 	private var trimmedDraft: String {
 		draft.trimmingCharacters(in: .whitespacesAndNewlines)
 	}
+
+	private func userFacingMessage(for error: any Error) -> String {
+		guard let clientError = error as? ChatLLMClientError else {
+			return Self.genericErrorMessage
+		}
+		switch clientError {
+		case .invalidAPIKey:
+			return "ChatLLM couldn’t authenticate with the backend. Check the app configuration."
+		case .requestFailed(_, let apiError?):
+			return "\(apiError.message)\n\nRequest ID: \(apiError.requestId)"
+		case .invalidHTTPResponse, .requestFailed, .invalidResponsePayload:
+			return Self.genericErrorMessage
+		}
+	}
+
+	private static let genericErrorMessage =
+		"The response couldn’t be generated. Please try again."
 }
