@@ -14,14 +14,20 @@ struct ModelSelectionView: View {
 
 	var body: some View {
 		NavigationStack {
-			List(models) { model in
-				Button {
-					selectModel(model)
-				} label: {
-					ModelSelectionRow(model: model)
+			List {
+				ForEach(providerNames, id: \.self) { providerName in
+					Section(providerName) {
+						ForEach(models(for: providerName)) { model in
+							Button {
+								selectModel(model)
+							} label: {
+								ModelSelectionRow(model: model)
+							}
+							.buttonStyle(.plain)
+							.disabled(!model.availability.isAvailable)
+						}
+					}
 				}
-				.buttonStyle(.plain)
-				.disabled(!model.availability.isAvailable)
 			}
 			.navigationTitle("Choose a Model")
 			.navigationBarTitleDisplayMode(.inline)
@@ -32,6 +38,19 @@ struct ModelSelectionView: View {
 				}
 			}
 		}
+	}
+
+	private var providerNames: [String] {
+		models.reduce(into: []) { providerNames, model in
+			guard providerNames.contains(model.providerName) == false else {
+				return
+			}
+			providerNames.append(model.providerName)
+		}
+	}
+
+	private func models(for providerName: String) -> [ChatModel] {
+		models.filter { $0.providerName == providerName }
 	}
 }
 

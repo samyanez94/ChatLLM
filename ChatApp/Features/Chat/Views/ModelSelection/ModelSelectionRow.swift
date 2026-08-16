@@ -19,7 +19,7 @@ struct ModelSelectionRow: View {
 				Text(model.displayName)
 					.font(.headline)
 
-				Text(model.providerName)
+				Text(model.summary)
 					.font(.subheadline)
 					.foregroundStyle(.secondary)
 

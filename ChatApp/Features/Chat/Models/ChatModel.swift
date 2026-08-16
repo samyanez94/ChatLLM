@@ -15,6 +15,9 @@ struct ChatModel: Identifiable {
 	/// The user-facing name of the model provider.
 	let providerName: String
 
+	/// A short explanation that helps users choose this model.
+	let summary: String
+
 	/// The model's current ability to generate a response.
 	let availability: ChatModelAvailability
 }

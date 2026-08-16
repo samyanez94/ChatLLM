@@ -27,9 +27,24 @@ enum OpenAIModelCatalog {
 		isConfigured: Bool = ChatLLMConfiguration() != nil
 	) -> [ChatModel] {
 		[
-			model(id: lunaId, displayName: "GPT-5.6 Luna", isConfigured: isConfigured),
-			model(id: terraId, displayName: "GPT-5.6 Terra", isConfigured: isConfigured),
-			model(id: solId, displayName: "GPT-5.6 Sol", isConfigured: isConfigured)
+			model(
+				id: lunaId,
+				displayName: "GPT-5.6 Luna",
+				summary: "Fast and economical. Best for simple questions and frequent use.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: terraId,
+				displayName: "GPT-5.6 Terra",
+				summary: "A strong balance of capability and cost. Best for most conversations.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: solId,
+				displayName: "GPT-5.6 Sol",
+				summary: "The most capable option. Best for complex problems and coding.",
+				isConfigured: isConfigured
+			)
 		]
 	}
 
@@ -44,12 +59,14 @@ enum OpenAIModelCatalog {
 	private static func model(
 		id: ChatModel.ID,
 		displayName: String,
+		summary: String,
 		isConfigured: Bool
 	) -> ChatModel {
 		ChatModel(
 			id: id,
 			displayName: displayName,
 			providerName: "OpenAI",
+			summary: summary,
 			availability: availability(isConfigured: isConfigured)
 		)
 	}

@@ -24,6 +24,7 @@ final class FoundationModelsChatService: ChatProviding {
 			id: Self.modelID,
 			displayName: "Apple Foundation Model",
 			providerName: "Apple",
+			summary: "Private, on-device responses. Best for everyday tasks without using a server.",
 			availability: availability
 		)
 	}

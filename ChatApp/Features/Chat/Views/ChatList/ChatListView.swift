@@ -65,8 +65,6 @@ struct ChatListView: View {
 								models: viewModel.models,
 								selectModel: selectModel
 							)
-							.presentationDetents([.medium, .large])
-							.presentationDragIndicator(.visible)
 						}
 				}
 			}
