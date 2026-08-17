@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS
+    runs-on: macos-26
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check formatting
+        continue-on-error: true
+        run: swift format lint --recursive ChatLLM ChatLLMTests
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -project ChatLLM.xcodeproj \
+            -scheme ChatLLM \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+            CODE_SIGNING_ALLOWED=NO
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Check formatting
+        continue-on-error: true
+        working-directory: supabase/functions
+        run: deno fmt --check
+
+      - name: Lint
+        continue-on-error: true
+        working-directory: supabase/functions
+        run: deno lint
+
+      - name: Run tests
+        working-directory: supabase/functions/chat
+        run: deno test --allow-env --allow-net ../_shared
