@@ -4,9 +4,11 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
+import SwiftData
 import SwiftUI
 
 struct ChatListView: View {
+	@Environment(\.modelContext) private var modelContext
 	@State private var viewModel: ChatListViewModel
 	@State private var path: [ChatViewModel.ID] = []
 	@State private var isSelectingModel = false
@@ -76,7 +78,10 @@ struct ChatListView: View {
 	}
 
 	private func selectModel(_ model: LanguageModel) {
-		guard let chat = viewModel.createChat(using: model) else {
+		guard let chat = viewModel.createChat(
+			using: model,
+			modelContext: modelContext
+		) else {
 			return
 		}
 
@@ -95,10 +100,15 @@ struct ChatListView: View {
 }
 
 #Preview("Empty") {
+	let container = PreviewContainer.make()
+
 	ChatListView()
+		.modelContainer(container)
 }
 
 #Preview("Chats") {
+	let container = PreviewContainer.make()
+
 	ChatListView(
 		viewModel: ChatListViewModel(
 			chats: [
@@ -110,9 +120,11 @@ struct ChatListView: View {
 							text: "Where would you like to go?",
 							role: .assistant
 						)
-					]
+					],
+					modelContext: container.mainContext
 				)
 			]
 		)
 	)
+	.modelContainer(container)
 }

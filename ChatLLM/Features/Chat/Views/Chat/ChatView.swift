@@ -4,12 +4,13 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
+import SwiftData
 import SwiftUI
 
 struct ChatView: View {
 	@State private var viewModel: ChatViewModel
 
-	init(viewModel: ChatViewModel = ChatViewModel()) {
+	init(viewModel: ChatViewModel) {
 		_viewModel = State(initialValue: viewModel)
 	}
 
@@ -46,7 +47,12 @@ struct ChatView: View {
 }
 
 #Preview {
+	let container = PreviewContainer.make()
+
 	NavigationStack {
-		ChatView()
+		ChatView(
+			viewModel: ChatViewModel(modelContext: container.mainContext)
+		)
 	}
+	.modelContainer(container)
 }

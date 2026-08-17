@@ -6,6 +6,7 @@
 
 import Foundation
 import Observation
+import SwiftData
 
 /// Represents one chat and coordinates its conversation with a fixed model provider.
 @Observable
@@ -24,29 +25,40 @@ final class ChatViewModel: Identifiable {
 
 	private let provider: any ChatProviding
 
+	private let modelContext: ModelContext
+
 	/// Creates a view model for an existing persisted chat.
-	init(chat: Chat, provider: any ChatProviding) {
+	init(
+		chat: Chat,
+		provider: any ChatProviding,
+		modelContext: ModelContext
+	) {
 		self.chat = chat
 		self.provider = provider
+		self.modelContext = modelContext
 	}
 
 	/// Creates a new chat for previews, tests, and session-only callers.
 	convenience init(
 		id: UUID = UUID(),
 		provider: any ChatProviding = FoundationModelsChatService(),
-		messages: [ChatMessage] = []
+		messages: [ChatMessage] = [],
+		modelContext: ModelContext
 	) {
 		let now = Date.now
+		let chat = Chat(
+			id: id,
+			providerId: provider.model.providerId,
+			modelId: provider.model.id,
+			createdAt: now,
+			updatedAt: messages.map(\.createdAt).max() ?? now,
+			messages: messages
+		)
+		modelContext.insert(chat)
 		self.init(
-			chat: Chat(
-				id: id,
-				providerId: provider.model.providerId,
-				modelId: provider.model.id,
-				createdAt: now,
-				updatedAt: messages.map(\.createdAt).max() ?? now,
-				messages: messages
-			),
-			provider: provider
+			chat: chat,
+			provider: provider,
+			modelContext: modelContext
 		)
 	}
 
@@ -110,7 +122,18 @@ final class ChatViewModel: Identifiable {
 
 		let message = trimmedDraft
 
-		chat.appendMessage(text: message, role: .user)
+		let previousUpdatedAt = chat.updatedAt
+		let userMessage = chat.appendMessage(text: message, role: .user)
+		do {
+			try modelContext.save()
+		} catch {
+			chat.messages.removeAll { $0.id == userMessage.id }
+			modelContext.delete(userMessage)
+			chat.updatedAt = previousUpdatedAt
+			errorMessage = Self.userMessageSaveError
+			return
+		}
+
 		draft = ""
 		isResponding = true
 		defer {
@@ -120,6 +143,11 @@ final class ChatViewModel: Identifiable {
 		do {
 			let reply = try await provider.generateReply(to: message)
 			chat.appendMessage(text: reply, role: .assistant)
+			do {
+				try modelContext.save()
+			} catch {
+				errorMessage = Self.assistantMessageSaveError
+			}
 		} catch is CancellationError {
 			return
 		} catch {
@@ -147,4 +175,10 @@ final class ChatViewModel: Identifiable {
 
 	private static let genericErrorMessage =
 		"The response couldn’t be generated. Please try again."
+
+	private static let userMessageSaveError =
+		"Your message couldn’t be saved on this device. Please try again."
+
+	private static let assistantMessageSaveError =
+		"The response couldn’t be saved on this device and may be lost when you close the app."
 }

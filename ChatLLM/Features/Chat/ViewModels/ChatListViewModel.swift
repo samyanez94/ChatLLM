@@ -6,6 +6,7 @@
 
 import Foundation
 import Observation
+import SwiftData
 
 /// Manages the chats created during the current app session.
 @Observable
@@ -38,18 +39,20 @@ final class ChatListViewModel {
 	/// Creates and stores a chat with a fresh provider session.
 	/// - Parameter model: The model to assign to the conversation.
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
-	func createChat(using model: LanguageModel) -> ChatViewModel? {
+	func createChat(
+		using model: LanguageModel,
+		modelContext: ModelContext
+	) -> ChatViewModel? {
 		guard model.availability.isAvailable,
 			let provider = providerFactory.makeProvider(for: model),
 			provider.model.availability.isAvailable
 		else {
 			return nil
 		}
-		let chat = Chat(
-			providerId: provider.model.providerId,
-			modelId: provider.model.id
+		let chatViewModel = ChatViewModel(
+			provider: provider,
+			modelContext: modelContext
 		)
-		let chatViewModel = ChatViewModel(chat: chat, provider: provider)
 		chats.append(chatViewModel)
 		return chatViewModel
 	}

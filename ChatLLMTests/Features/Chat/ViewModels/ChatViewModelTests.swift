@@ -3,6 +3,7 @@
 //  ChatLLMTests
 //
 
+import SwiftData
 import Testing
 
 @testable import ChatLLM
@@ -14,11 +15,13 @@ struct ChatViewModelTests {
 	@Test("Sending a message appends the user message and reply")
 	func sendsMessage() async throws {
 		let provider = StubChatProvider(result: .success("Hello back"))
-		let chat = Chat(
-			providerId: provider.model.providerId,
-			modelId: provider.model.id
+		let container = try makeModelContainer()
+		let modelContext = container.mainContext
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: modelContext
 		)
-		let viewModel = ChatViewModel(chat: chat, provider: provider)
+		let chat = viewModel.chat
 		viewModel.draft = "  Hello  "
 
 		await viewModel.sendMessage()
@@ -31,12 +34,19 @@ struct ChatViewModelTests {
 		#expect(viewModel.draft.isEmpty)
 		#expect(viewModel.isResponding == false)
 		#expect(viewModel.errorMessage == nil)
+		#expect(try modelContext.fetchCount(FetchDescriptor<Chat>()) == 1)
+		#expect(try modelContext.fetchCount(FetchDescriptor<ChatMessage>()) == 2)
 	}
 
 	@Test("A failed response keeps the user message and presents an error")
-	func handlesFailedResponse() async {
+	func handlesFailedResponse() async throws {
 		let provider = StubChatProvider(result: .failure(TestError.responseFailed))
-		let viewModel = ChatViewModel(provider: provider, messages: [])
+		let container = try makeModelContainer()
+		let modelContext = container.mainContext
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: modelContext
+		)
 		viewModel.draft = "Hello"
 
 		await viewModel.sendMessage()
@@ -47,10 +57,11 @@ struct ChatViewModelTests {
 				== "The response couldn’t be generated. Please try again."
 		)
 		#expect(viewModel.isResponding == false)
+		#expect(try modelContext.fetchCount(FetchDescriptor<ChatMessage>()) == 1)
 	}
 
 	@Test("A backend error preserves its message and request identifier")
-	func preservesBackendError() async {
+	func preservesBackendError() async throws {
 		let apiError = ChatLLMAPIError(
 			code: "rate_limited",
 			message: "The provider rate limit has been exceeded.",
@@ -61,7 +72,11 @@ struct ChatViewModelTests {
 				ChatLLMClientError.requestFailed(statusCode: 429, apiError: apiError)
 			)
 		)
-		let viewModel = ChatViewModel(provider: provider, messages: [])
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: container.mainContext
+		)
 		viewModel.draft = "Hello"
 
 		await viewModel.sendMessage()
@@ -71,6 +86,15 @@ struct ChatViewModelTests {
 				== "The provider rate limit has been exceeded.\n\nRequest ID: request-123"
 		)
 	}
+}
+
+@MainActor
+private func makeModelContainer() throws -> ModelContainer {
+	try ModelContainer(
+		for: Schema(versionedSchema: ChatSchemaV1.self),
+		migrationPlan: ChatMigrationPlan.self,
+		configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+	)
 }
 
 // MARK: - StubChatProvider
