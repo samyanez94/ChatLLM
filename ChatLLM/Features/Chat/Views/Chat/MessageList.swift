@@ -10,6 +10,7 @@ struct MessageList: View {
 	private static let progressId = "generating-response"
 
 	let messages: [ChatMessage]
+
 	let isResponding: Bool
 
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -43,11 +44,9 @@ struct MessageList: View {
 
 	private func scrollToLatestMessage(using proxy: ScrollViewProxy) {
 		let target: AnyHashable? = isResponding ? Self.progressId : messages.last?.id
-
 		guard let target else {
 			return
 		}
-
 		if reduceMotion {
 			proxy.scrollTo(target, anchor: .bottom)
 		} else {

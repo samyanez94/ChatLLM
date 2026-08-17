@@ -4,10 +4,14 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
+import MarkdownUI
 import SwiftUI
-import UIKit
 
 struct MessageBubble: View {
+	private static let assistantTheme = Theme.gitHub.text {
+		BackgroundColor(.clear)
+	}
+
 	let message: ChatMessage
 
 	var body: some View {
@@ -21,10 +25,6 @@ struct MessageBubble: View {
 				.background(backgroundStyle)
 				.foregroundStyle(foregroundStyle)
 				.clipShape(.rect(cornerRadius: 18))
-				.accessibilityLabel("\(speakerName): \(message.text)")
-				.contextMenu {
-					Button("Copy", systemImage: "doc.on.doc", action: copyMessage)
-				}
 			if message.role == .assistant {
 				Spacer(minLength: 48)
 			}
@@ -34,18 +34,16 @@ struct MessageBubble: View {
 	@ViewBuilder
 	private var messageText: some View {
 		if message.role == .assistant {
-			Text(markdownText)
-				.font(.body)
-				.lineSpacing(3)
-				.textSelection(.enabled)
+			Markdown(message.text)
+				.markdownTheme(
+					Theme.gitHub.text {
+						BackgroundColor(.clear)
+					}
+				)
 		} else {
 			Text(message.text)
 				.font(.body)
 		}
-	}
-
-	private var markdownText: AttributedString {
-		(try? AttributedString(markdown: message.text)) ?? AttributedString(message.text)
 	}
 
 	private var backgroundStyle: Color {
@@ -54,13 +52,5 @@ struct MessageBubble: View {
 
 	private var foregroundStyle: Color {
 		message.role == .user ? .white : .primary
-	}
-
-	private var speakerName: String {
-		message.role == .user ? "You" : "Assistant"
-	}
-
-	private func copyMessage() {
-		UIPasteboard.general.string = message.text
 	}
 }
