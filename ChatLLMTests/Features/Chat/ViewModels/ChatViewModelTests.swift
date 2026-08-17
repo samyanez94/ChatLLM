@@ -132,7 +132,7 @@ private final class StubChatProvider: ChatProviding {
 	)
 
 	private let result: Result<String, any Error>
-    
+
 	let continuationId: String?
 
 	private(set) var receivedMessages: [String] = []

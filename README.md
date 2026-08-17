@@ -22,6 +22,7 @@ and hosted models, with all the provider-specific plumbing tucked out of sight.
 - Chat with supported OpenAI models through a Supabase Edge Function.
 - Choose models grouped by provider, with short descriptions and availability
   information.
+- Persist chat history locally and restore conversations across app launches.
 - Continue multi-turn hosted conversations using opaque response identifiers.
 - Surface safe backend errors and request identifiers for troubleshooting.
 - Cover the client and backend contract with Swift Testing and Deno tests.
@@ -48,6 +49,11 @@ There are two main pieces:
 For hosted models, the app sends the provider, model, message, and optional
 continuation ID to the backend. The backend gets the final say on which
 provider and model combinations are supported.
+
+The app stores chats and messages locally with SwiftData. It also persists the
+opaque continuation IDs needed to resume hosted conversations. On-device
+Foundation Models sessions are reconstructed from their saved transcripts when
+the app launches again.
 
 The full API contract lives in [docs/chat-api.md](docs/chat-api.md).
 
@@ -137,7 +143,7 @@ requests.
 
 ## Current Limitations
 
-Chat history currently lasts only for the active app session. There's no
-persistence or response streaming yet, and the backend isn't set up for
-production authentication. Those are all areas that may be explored later,
-along with support for more providers.
+Response streaming isn't supported yet, and the backend isn't set up for
+production authentication. Persistence is also still early in development, so
+schema changes may require deleting the app or simulator data. These are areas
+that may be explored further, along with support for more providers.
