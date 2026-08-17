@@ -9,7 +9,7 @@ Deno.test("parses a valid request and ignores unknown fields", () => {
   const request = parseChatRequest({
     provider: "openai",
     model: "gpt-5.6-luna",
-    input: " Hello ",
+    messages: [{ role: "user", content: " Hello " }],
     continuation_id: "resp_123",
     unknown: true,
   });
@@ -17,7 +17,7 @@ Deno.test("parses a valid request and ignores unknown fields", () => {
   assertEquals(request, {
     provider: "openai",
     model: "gpt-5.6-luna",
-    input: " Hello ",
+    messages: [{ role: "user", content: " Hello " }],
     continuationId: "resp_123",
   });
 });
@@ -26,34 +26,57 @@ Deno.test("omits an absent continuation", () => {
   const request = parseChatRequest({
     provider: "openai",
     model: "gpt-5.6-luna",
-    input: "Hello",
+    messages: [{ role: "user", content: "Hello" }],
   });
 
   assertEquals(request, {
     provider: "openai",
     model: "gpt-5.6-luna",
-    input: "Hello",
+    messages: [{ role: "user", content: "Hello" }],
   });
 });
 
 for (
   const [name, body] of [
     ["non-object body", []],
-    ["missing provider", { model: "gpt-5.6-luna", input: "Hello" }],
+    ["missing provider", {
+      model: "gpt-5.6-luna",
+      messages: [{ role: "user", content: "Hello" }],
+    }],
     ["whitespace provider", {
       provider: " openai ",
       model: "gpt-5.6-luna",
-      input: "Hello",
+      messages: [{ role: "user", content: "Hello" }],
     }],
-    ["whitespace input", {
+    ["empty messages", {
       provider: "openai",
       model: "gpt-5.6-luna",
-      input: "   ",
+      messages: [],
+    }],
+    ["whitespace content", {
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      messages: [{ role: "user", content: "   " }],
+    }],
+    ["unknown message role", {
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      messages: [{ role: "system", content: "Hello" }],
+    }],
+    ["assistant final message", {
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      messages: [{ role: "assistant", content: "Hello" }],
+    }],
+    ["legacy input", {
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      input: "Hello",
     }],
     ["invalid continuation", {
       provider: "openai",
       model: "gpt-5.6-luna",
-      input: "Hello",
+      messages: [{ role: "user", content: "Hello" }],
       continuation_id: null,
     }],
   ] as const
@@ -64,22 +87,39 @@ for (
   });
 }
 
-Deno.test("accepts input at the size limit", () => {
+Deno.test("accepts message content at the combined size limit", () => {
   const input = "a".repeat(maximumInputBytes);
   const request = parseChatRequest({
     provider: "openai",
     model: "gpt-5.6-luna",
-    input,
+    messages: [
+      { role: "user", content: input.slice(0, maximumInputBytes / 2) },
+      { role: "assistant", content: "Reply" },
+      {
+        role: "user",
+        content: input.slice(maximumInputBytes / 2 + "Reply".length),
+      },
+    ],
   });
-  assertEquals(request.input, input);
+  assertEquals(
+    request.messages.reduce(
+      (total, message) => total + message.content.length,
+      0,
+    ),
+    maximumInputBytes,
+  );
 });
 
-Deno.test("rejects input over the size limit", async () => {
+Deno.test("rejects combined message content over the size limit", async () => {
   const error = await captureError(() =>
     parseChatRequest({
       provider: "openai",
       model: "gpt-5.6-luna",
-      input: "a".repeat(maximumInputBytes + 1),
+      messages: [
+        { role: "user", content: "a".repeat(maximumInputBytes) },
+        { role: "assistant", content: "b" },
+        { role: "user", content: "c" },
+      ],
     })
   );
   assertChatAPIError(error, "input_too_large", 413);

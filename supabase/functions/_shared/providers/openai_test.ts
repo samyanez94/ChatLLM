@@ -13,7 +13,11 @@ import {
 const request: ChatRequest = {
   provider: "openai",
   model: "gpt-5.6-luna",
-  input: "Hello",
+  messages: [
+    { role: "user", content: "Earlier" },
+    { role: "assistant", content: "Earlier reply" },
+    { role: "user", content: "Hello" },
+  ],
 };
 
 Deno.test("creates an OpenAI response request", async () => {
@@ -43,7 +47,7 @@ Deno.test("creates an OpenAI response request", async () => {
   assertEquals(response, { id: "resp_123", outputText: "Hello world" });
 });
 
-Deno.test("omits previous_response_id without a continuation", async () => {
+Deno.test("sends the complete transcript without a continuation", async () => {
   let capturedBody: unknown;
   await createOpenAIResponse(
     request,
@@ -56,7 +60,7 @@ Deno.test("omits previous_response_id without a continuation", async () => {
 
   assertEquals(capturedBody, {
     model: "gpt-5.6-luna",
-    input: "Hello",
+    input: request.messages,
   });
 });
 

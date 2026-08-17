@@ -50,6 +50,51 @@ struct ChatProviderFactoryTests {
 		)
 	}
 
+	@Test("The model catalog includes the current Claude family")
+	func includesAnthropicModels() throws {
+		let factory = ChatProviderFactory(
+			chatLLMConfiguration: try makeConfiguration()
+		)
+		let models = factory.models.filter {
+			$0.providerId == AnthropicModelCatalog.providerId
+		}
+
+		#expect(models.map(\.id) == AnthropicModelCatalog.modelIds)
+		#expect(models.allSatisfy { $0.providerName == "Anthropic" })
+		#expect(
+			models.map(\.displayName)
+				== ["Claude Opus 5", "Claude Sonnet 5", "Claude Haiku 4.5"]
+		)
+		#expect(models.allSatisfy { $0.availability.isAvailable })
+	}
+
+	@Test(
+		"The factory creates each Anthropic provider when configured",
+		arguments: AnthropicModelCatalog.modelIds
+	)
+	func createsAnthropicProvider(modelId: LanguageModel.ID) throws {
+		let factory = ChatProviderFactory(
+			chatLLMConfiguration: try makeConfiguration()
+		)
+		let model = try #require(factory.models.first { $0.id == modelId })
+
+		let provider = try #require(factory.makeProvider(for: model))
+
+		#expect(provider is ChatLLMChatService)
+		#expect(provider.model.id == modelId)
+	}
+
+	@Test("Anthropic models remain listed but unavailable without configuration")
+	func anthropicUnavailableWithoutConfiguration() {
+		let factory = ChatProviderFactory(chatLLMConfiguration: nil)
+		let models = factory.models.filter {
+			$0.providerId == AnthropicModelCatalog.providerId
+		}
+
+		#expect(models.map(\.id) == AnthropicModelCatalog.modelIds)
+		#expect(models.allSatisfy { $0.availability.isAvailable == false })
+	}
+
 	@Test(
 		"The factory creates each OpenAI provider when configured",
 		arguments: OpenAIModelCatalog.modelIds

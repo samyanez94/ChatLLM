@@ -1,7 +1,9 @@
 import type { ChatRequest } from "../chat_request.ts";
 import { ChatAPIError } from "../errors.ts";
 
-const responsesURL = "https://api.openai.com/v1/responses";
+const messagesURL = "https://api.anthropic.com/v1/messages";
+const anthropicVersion = "2023-06-01";
+const maximumOutputTokens = 8_192;
 const requestTimeoutMilliseconds = 60_000;
 
 type Fetch = (
@@ -9,29 +11,27 @@ type Fetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-export interface OpenAIClientDependencies {
+export interface AnthropicClientDependencies {
   apiKey: string | undefined;
   fetch: Fetch;
   timeoutMilliseconds: number;
 }
 
-export interface OpenAIResponse {
-  id: string;
+export interface AnthropicResponse {
   outputText: string;
 }
 
-/** Creates a response using OpenAI's Responses API. */
-export async function createOpenAIResponse(
+/** Creates a response using Anthropic's Messages API. */
+export async function createAnthropicResponse(
   request: ChatRequest,
   requestId: string,
-  dependencies: OpenAIClientDependencies = {
-    apiKey: Deno.env.get("OPENAI_API_KEY"),
+  dependencies: AnthropicClientDependencies = {
+    apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
     fetch,
     timeoutMilliseconds: requestTimeoutMilliseconds,
   },
-): Promise<OpenAIResponse> {
-  const apiKey = dependencies.apiKey;
-  if (!apiKey) {
+): Promise<AnthropicResponse> {
+  if (!dependencies.apiKey) {
     throw new ChatAPIError(
       "internal_error",
       "The chat service is not configured.",
@@ -40,21 +40,18 @@ export async function createOpenAIResponse(
 
   let response: Response;
   try {
-    response = await dependencies.fetch(responsesURL, {
+    response = await dependencies.fetch(messagesURL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        "anthropic-version": anthropicVersion,
         "Content-Type": "application/json",
-        "X-Client-Request-Id": requestId,
+        "x-api-key": dependencies.apiKey,
+        "X-Request-Id": requestId,
       },
       body: JSON.stringify({
         model: request.model,
-        input: request.continuationId === undefined
-          ? request.messages.map(({ role, content }) => ({ role, content }))
-          : request.messages.at(-1)?.content,
-        ...(request.continuationId === undefined ? {} : {
-          previous_response_id: request.continuationId,
-        }),
+        max_tokens: maximumOutputTokens,
+        messages: request.messages,
       }),
       signal: AbortSignal.timeout(dependencies.timeoutMilliseconds),
     });
@@ -72,15 +69,6 @@ export async function createOpenAIResponse(
   }
 
   if (!response.ok) {
-    if (
-      request.continuationId !== undefined &&
-      (response.status === 400 || response.status === 404)
-    ) {
-      throw new ChatAPIError(
-        "invalid_continuation",
-        "The continuation cannot be used with this request.",
-      );
-    }
     if (response.status === 429) {
       throw new ChatAPIError(
         "rate_limited",
@@ -94,7 +82,7 @@ export async function createOpenAIResponse(
   }
 
   const responseBody: unknown = await response.json().catch(() => undefined);
-  const parsedResponse = parseOpenAIResponse(responseBody);
+  const parsedResponse = parseAnthropicResponse(responseBody);
   if (!parsedResponse) {
     throw new ChatAPIError(
       "provider_error",
@@ -104,29 +92,19 @@ export async function createOpenAIResponse(
   return parsedResponse;
 }
 
-function parseOpenAIResponse(value: unknown): OpenAIResponse | undefined {
-  if (
-    !isRecord(value) || typeof value.id !== "string" || value.id.length === 0
-  ) {
+function parseAnthropicResponse(
+  value: unknown,
+): AnthropicResponse | undefined {
+  if (!isRecord(value) || !Array.isArray(value.content)) {
     return undefined;
   }
-
-  const outputText = Array.isArray(value.output)
-    ? value.output
-      .flatMap((item) =>
-        isRecord(item) && Array.isArray(item.content) ? item.content : []
-      )
-      .filter((item) => isRecord(item) && item.type === "output_text")
-      .map((item) =>
-        isRecord(item) && typeof item.text === "string" ? item.text : ""
-      )
-      .join("")
-    : "";
-
-  if (outputText.length === 0) {
-    return undefined;
-  }
-  return { id: value.id, outputText };
+  const outputText = value.content
+    .filter((item) => isRecord(item) && item.type === "text")
+    .map((item) =>
+      isRecord(item) && typeof item.text === "string" ? item.text : ""
+    )
+    .join("");
+  return outputText.length === 0 ? undefined : { outputText };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

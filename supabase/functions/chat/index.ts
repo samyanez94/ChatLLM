@@ -4,6 +4,7 @@ import { parseChatRequest } from "../_shared/chat_request.ts";
 import type { ChatResponse } from "../_shared/chat_response.ts";
 import { ChatAPIError, makeErrorResponse } from "../_shared/errors.ts";
 import { isSupportedModel, isSupportedProvider } from "../_shared/models.ts";
+import { createAnthropicResponse } from "../_shared/providers/anthropic.ts";
 import { createOpenAIResponse } from "../_shared/providers/openai.ts";
 
 export default {
@@ -38,14 +39,15 @@ export default {
         );
       }
 
-      const providerResponse = await createOpenAIResponse(
-        chatRequest,
-        requestId,
-      );
+      const providerResponse = chatRequest.provider === "openai"
+        ? await createOpenAIResponse(chatRequest, requestId)
+        : await createAnthropicResponse(chatRequest, requestId);
       const response: ChatResponse = {
         provider: chatRequest.provider,
         model: chatRequest.model,
-        continuation_id: providerResponse.id,
+        ...(hasContinuationId(providerResponse)
+          ? { continuation_id: providerResponse.id }
+          : {}),
         output_text: providerResponse.outputText,
       };
       return Response.json(response, {
@@ -67,6 +69,12 @@ export default {
     }
   }),
 };
+
+function hasContinuationId(
+  response: { outputText: string } | { id: string; outputText: string },
+): response is { id: string; outputText: string } {
+  return "id" in response;
+}
 
 async function parseJSON(request: Request): Promise<unknown> {
   try {

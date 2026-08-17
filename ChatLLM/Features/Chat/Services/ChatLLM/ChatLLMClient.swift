@@ -9,7 +9,9 @@ import Foundation
 
 /// Sends provider-neutral requests to the hosted ChatLLM API.
 nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
+
 	private let configuration: ChatLLMConfiguration
+
 	private let session: any URLSessionDataLoading
 
 	init(
@@ -24,20 +26,19 @@ nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
 	func createResponse(
 		provider: String,
 		model: String,
-		input: String,
+		messages: [ChatLLMRequestMessage],
 		continuationId: String? = nil
 	) async throws -> ChatLLMResponse {
 		let request = try makeRequest(
 			provider: provider,
 			model: model,
-			input: input,
+			messages: messages,
 			continuationId: continuationId
 		)
 		let (data, response) = try await session.data(for: request)
 		guard let httpResponse = response as? HTTPURLResponse else {
 			throw ChatLLMClientError.invalidHTTPResponse
 		}
-
 		guard (200...299).contains(httpResponse.statusCode) else {
 			if httpResponse.statusCode == 401 {
 				throw ChatLLMClientError.invalidAPIKey
@@ -48,22 +49,19 @@ nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
 				apiError: envelope?.error
 			)
 		}
-
 		let payload: ResponsePayload
 		do {
 			payload = try JSONDecoder().decode(ResponsePayload.self, from: data)
 		} catch {
 			throw ChatLLMClientError.invalidResponsePayload
 		}
-
 		guard payload.provider == provider,
 			payload.model == model,
-			payload.continuationId.isEmpty == false,
+			payload.continuationId?.isEmpty != true,
 			payload.outputText.isEmpty == false
 		else {
 			throw ChatLLMClientError.invalidResponsePayload
 		}
-
 		return ChatLLMResponse(
 			provider: payload.provider,
 			model: payload.model,
@@ -76,13 +74,13 @@ nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
 	private func makeRequest(
 		provider: String,
 		model: String,
-		input: String,
+		messages: [ChatLLMRequestMessage],
 		continuationId: String?
 	) throws -> URLRequest {
 		let payload = RequestPayload(
 			provider: provider,
 			model: model,
-			input: input,
+			messages: messages,
 			continuationId: continuationId
 		)
 		var request = URLRequest(url: configuration.endpoint)
@@ -95,16 +93,17 @@ nonisolated struct ChatLLMClient: ChatLLMResponseCreating, Sendable {
 }
 
 extension ChatLLMClient {
+
 	private nonisolated struct RequestPayload: Encodable, Sendable {
 		let provider: String
 		let model: String
-		let input: String
+		let messages: [ChatLLMRequestMessage]
 		let continuationId: String?
 
 		private enum CodingKeys: String, CodingKey {
 			case provider
 			case model
-			case input
+			case messages
 			case continuationId = "continuation_id"
 		}
 	}
@@ -112,7 +111,7 @@ extension ChatLLMClient {
 	private nonisolated struct ResponsePayload: Decodable, Sendable {
 		let provider: String
 		let model: String
-		let continuationId: String
+		let continuationId: String?
 		let outputText: String
 
 		private enum CodingKeys: String, CodingKey {

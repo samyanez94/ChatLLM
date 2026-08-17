@@ -35,7 +35,7 @@ struct ChatLLMChatServiceTests {
 				.init(
 					provider: "openai",
 					model: modelId,
-					input: "Hello",
+					messages: [.init(role: .user, content: "Hello")],
 					continuationId: nil
 				)
 			]
@@ -61,6 +61,13 @@ struct ChatLLMChatServiceTests {
 
 		#expect(reply == "Second reply")
 		#expect(requests.map(\.continuationId) == [nil, "response-1"])
+		#expect(
+			requests.last?.messages == [
+				.init(role: .user, content: "First"),
+				.init(role: .assistant, content: "First reply"),
+				.init(role: .user, content: "Second")
+			]
+		)
 	}
 
 	@Test("A restored conversation uses its persisted continuation identifier")
@@ -71,6 +78,10 @@ struct ChatLLMChatServiceTests {
 		let service = ChatLLMChatService(
 			client: client,
 			model: try makeModel(),
+			messages: [
+				.init(role: .user, content: "Original"),
+				.init(role: .assistant, content: "Original reply")
+			],
 			continuationId: "response-1"
 		)
 
@@ -79,7 +90,49 @@ struct ChatLLMChatServiceTests {
 
 		#expect(reply == "Restored reply")
 		#expect(requests.map(\.continuationId) == ["response-1"])
+		#expect(requests.first?.messages.count == 3)
 		#expect(service.continuationId == "response-2")
+	}
+
+	@Test("A restored Claude conversation sends its persisted transcript")
+	func restoredClaudeConversation() async throws {
+		let client = StubChatLLMClient(
+			responses: [
+				ChatLLMResponse(
+					provider: AnthropicModelCatalog.providerId,
+					model: AnthropicModelCatalog.sonnetId,
+					continuationId: nil,
+					outputText: "Restored reply",
+					requestId: nil
+				)
+			]
+		)
+		let persistedMessages = [
+			ChatMessage(sequence: 1, text: "Earlier reply", role: .assistant),
+			ChatMessage(sequence: 0, text: "Earlier", role: .user)
+		]
+		let model = try #require(
+			AnthropicModelCatalog.model(
+				withId: AnthropicModelCatalog.sonnetId,
+				isConfigured: true
+			)
+		)
+		let service = ChatLLMChatService(
+			client: client,
+			model: model,
+			persistedMessages: persistedMessages
+		)
+
+		_ = try await service.generateReply(to: "Continue")
+		let request = try #require(await client.recordedRequests.first)
+
+		#expect(
+			request.messages == [
+				.init(role: .user, content: "Earlier"),
+				.init(role: .assistant, content: "Earlier reply"),
+				.init(role: .user, content: "Continue")
+			]
+		)
 	}
 
 	@Test("A failed reply does not replace the last continuation identifier")
@@ -104,6 +157,13 @@ struct ChatLLMChatServiceTests {
 		let requests = await client.recordedRequests
 
 		#expect(requests.map(\.continuationId) == [nil, "response-1", "response-1"])
+		#expect(
+			requests.last?.messages == [
+				.init(role: .user, content: "First"),
+				.init(role: .assistant, content: "First reply"),
+				.init(role: .user, content: "Third")
+			]
+		)
 	}
 
 	private func makeModel(
@@ -133,7 +193,7 @@ private actor StubChatLLMClient: ChatLLMResponseCreating {
 	struct Request: Equatable, Sendable {
 		let provider: String
 		let model: String
-		let input: String
+		let messages: [ChatLLMRequestMessage]
 		let continuationId: String?
 	}
 
@@ -151,14 +211,14 @@ private actor StubChatLLMClient: ChatLLMResponseCreating {
 	func createResponse(
 		provider: String,
 		model: String,
-		input: String,
+		messages: [ChatLLMRequestMessage],
 		continuationId: String?
 	) async throws -> ChatLLMResponse {
 		recordedRequests.append(
 			Request(
 				provider: provider,
 				model: model,
-				input: input,
+				messages: messages,
 				continuationId: continuationId
 			)
 		)

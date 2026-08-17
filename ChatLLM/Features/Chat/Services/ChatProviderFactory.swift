@@ -16,6 +16,7 @@ struct ChatProviderFactory: ChatProviderCreating {
 	var models: [LanguageModel] {
 		[FoundationModelsChatService().model]
 			+ OpenAIModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
+			+ AnthropicModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
 	}
 
 	/// Creates a fresh provider session for a supported model.
@@ -45,22 +46,33 @@ struct ChatProviderFactory: ChatProviderCreating {
 		messages: [ChatMessage],
 		continuationId: String?
 	) -> (any ChatProviding)? {
-		if selectedModel.providerId == FoundationModelsChatService.providerId,
-			selectedModel.id == FoundationModelsChatService.modelId
-		{
+		let model: LanguageModel?
+		switch selectedModel.providerId {
+		case FoundationModelsChatService.providerId:
+			guard selectedModel.id == FoundationModelsChatService.modelId else {
+				return nil
+			}
 			return FoundationModelsChatService(messages: messages)
-		}
-		guard selectedModel.providerId == OpenAIModelCatalog.providerId,
-			let model = OpenAIModelCatalog.model(
+		case OpenAIModelCatalog.providerId:
+			model = OpenAIModelCatalog.model(
 				withId: selectedModel.id,
 				isConfigured: chatLLMConfiguration != nil
 			)
-		else {
+		case AnthropicModelCatalog.providerId:
+			model = AnthropicModelCatalog.model(
+				withId: selectedModel.id,
+				isConfigured: chatLLMConfiguration != nil
+			)
+		default:
+			return nil
+		}
+		guard let model else {
 			return nil
 		}
 		return ChatLLMChatService(
 			configuration: chatLLMConfiguration,
 			model: model,
+			messages: messages,
 			continuationId: continuationId
 		)
 	}

@@ -5,19 +5,25 @@
 //  Created by Samuel Yanez on 8/16/26.
 //
 
-/// Maintains one OpenAI conversation through the hosted ChatLLM backend.
+/// Maintains one hosted conversation through the ChatLLM backend.
 final class ChatLLMChatService: ChatProviding {
+
 	private let client: any ChatLLMResponseCreating
+
 	private(set) var continuationId: String?
+
 	private var isGenerating = false
 
-	/// Information about the OpenAI model used by this conversation.
+	private var messages: [ChatLLMRequestMessage]
+
+	/// Information about the hosted model used by this conversation.
 	let model: LanguageModel
 
 	/// Creates a live ChatLLM conversation when backend configuration is available.
 	init?(
 		configuration: ChatLLMConfiguration? = ChatLLMConfiguration(),
 		model: LanguageModel,
+		messages: [ChatMessage] = [],
 		continuationId: String? = nil
 	) {
 		guard let configuration else {
@@ -25,6 +31,7 @@ final class ChatLLMChatService: ChatProviding {
 		}
 		self.client = ChatLLMClient(configuration: configuration)
 		self.model = model
+		self.messages = messages.sorted { $0.sequence < $1.sequence }.map(ChatLLMRequestMessage.init)
 		self.continuationId = continuationId
 	}
 
@@ -32,10 +39,25 @@ final class ChatLLMChatService: ChatProviding {
 	init(
 		client: any ChatLLMResponseCreating,
 		model: LanguageModel,
+		messages: [ChatLLMRequestMessage] = [],
 		continuationId: String? = nil
 	) {
 		self.client = client
 		self.model = model
+		self.messages = messages
+		self.continuationId = continuationId
+	}
+
+	/// Restores a hosted conversation with an injected response client.
+	init(
+		client: any ChatLLMResponseCreating,
+		model: LanguageModel,
+		persistedMessages: [ChatMessage],
+		continuationId: String? = nil
+	) {
+		self.client = client
+		self.model = model
+		self.messages = persistedMessages.sorted { $0.sequence < $1.sequence }.map(ChatLLMRequestMessage.init)
 		self.continuationId = continuationId
 	}
 
@@ -48,13 +70,18 @@ final class ChatLLMChatService: ChatProviding {
 		defer {
 			isGenerating = false
 		}
-
+		let userMessage = ChatLLMRequestMessage(role: .user, content: message)
+		let requestMessages = messages + [userMessage]
 		let response = try await client.createResponse(
 			provider: model.providerId,
 			model: model.id,
-			input: message,
+			messages: requestMessages,
 			continuationId: continuationId
 		)
+		messages =
+			requestMessages + [
+				ChatLLMRequestMessage(role: .assistant, content: response.outputText)
+			]
 		continuationId = response.continuationId
 		return response.outputText
 	}

@@ -22,7 +22,7 @@ struct ChatLLMClientTests {
 		_ = try await client.createResponse(
 			provider: "openai",
 			model: "gpt-5.6-luna",
-			input: "Hello"
+			messages: [.init(role: .user, content: "Hello")]
 		)
 
 		let request = try #require(await session.lastRequest)
@@ -39,13 +39,35 @@ struct ChatLLMClientTests {
 
 		let body = try #require(request.httpBody)
 		let json = try #require(
-			JSONSerialization.jsonObject(with: body) as? [String: String]
+			JSONSerialization.jsonObject(with: body) as? [String: Any]
 		)
-		#expect(json["provider"] == "openai")
-		#expect(json["model"] == "gpt-5.6-luna")
-		#expect(json["input"] == "Hello")
+		#expect(json["provider"] as? String == "openai")
+		#expect(json["model"] as? String == "gpt-5.6-luna")
+		let messages = try #require(json["messages"] as? [[String: String]])
+		#expect(messages == [["role": "user", "content": "Hello"]])
 		#expect(json["continuation_id"] == nil)
 		#expect(String(decoding: body, as: UTF8.self).contains("sb_publishable_example") == false)
+	}
+
+	@Test("A response may omit a continuation identifier")
+	func decodesResponseWithoutContinuation() async throws {
+		let data = Data(
+			#"{"provider":"anthropic","model":"claude-sonnet-5","output_text":"Hello"}"#.utf8
+		)
+		let session = ChatLLMDataLoaderStub(
+			data: data,
+			response: try httpResponse(statusCode: 200)
+		)
+		let client = try makeClient(session: session)
+
+		let response = try await client.createResponse(
+			provider: "anthropic",
+			model: "claude-sonnet-5",
+			messages: [.init(role: .user, content: "Hello")]
+		)
+
+		#expect(response.continuationId == nil)
+		#expect(response.outputText == "Hello")
 	}
 
 	@Test("A continued response includes the continuation identifier")
@@ -59,16 +81,16 @@ struct ChatLLMClientTests {
 		_ = try await client.createResponse(
 			provider: "openai",
 			model: "gpt-5.6-luna",
-			input: "Continue",
+			messages: [.init(role: .user, content: "Continue")],
 			continuationId: "resp_previous"
 		)
 
 		let request = try #require(await session.lastRequest)
 		let body = try #require(request.httpBody)
 		let json = try #require(
-			JSONSerialization.jsonObject(with: body) as? [String: String]
+			JSONSerialization.jsonObject(with: body) as? [String: Any]
 		)
-		#expect(json["continuation_id"] == "resp_previous")
+		#expect(json["continuation_id"] as? String == "resp_previous")
 	}
 
 	@Test("A valid ChatLLM response is decoded")
@@ -85,7 +107,7 @@ struct ChatLLMClientTests {
 		let response = try await client.createResponse(
 			provider: "openai",
 			model: "gpt-5.6-luna",
-			input: "Hello"
+			messages: [.init(role: .user, content: "Hello")]
 		)
 
 		#expect(
@@ -133,7 +155,7 @@ struct ChatLLMClientTests {
 			try await client.createResponse(
 				provider: "openai",
 				model: "example-model",
-				input: "Hello"
+				messages: [.init(role: .user, content: "Hello")]
 			)
 		}
 	}
@@ -150,7 +172,7 @@ struct ChatLLMClientTests {
 			try await client.createResponse(
 				provider: "openai",
 				model: "gpt-5.6-luna",
-				input: "Hello"
+				messages: [.init(role: .user, content: "Hello")]
 			)
 		}
 	}
@@ -167,7 +189,7 @@ struct ChatLLMClientTests {
 			try await client.createResponse(
 				provider: "openai",
 				model: "gpt-5.6-luna",
-				input: "Hello"
+				messages: [.init(role: .user, content: "Hello")]
 			)
 		}
 	}
@@ -195,7 +217,7 @@ struct ChatLLMClientTests {
 			try await client.createResponse(
 				provider: "openai",
 				model: "gpt-5.6-luna",
-				input: "Hello"
+				messages: [.init(role: .user, content: "Hello")]
 			)
 		}
 	}

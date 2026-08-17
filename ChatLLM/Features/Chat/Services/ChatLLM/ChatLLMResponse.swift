@@ -9,7 +9,7 @@
 nonisolated struct ChatLLMResponse: Equatable, Sendable {
 	let provider: String
 	let model: String
-	let continuationId: String
+	let continuationId: String?
 	let outputText: String
 	let requestId: String?
 }

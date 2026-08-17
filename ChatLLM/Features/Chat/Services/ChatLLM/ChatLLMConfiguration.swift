@@ -9,6 +9,7 @@ import Foundation
 
 /// Validated, non-secret configuration for the hosted ChatLLM API.
 nonisolated struct ChatLLMConfiguration: Equatable, Sendable {
+
 	private static let resourceName = "ChatLLMConfiguration"
 
 	/// Hosted ChatLLM API endpoint.
@@ -26,7 +27,6 @@ nonisolated struct ChatLLMConfiguration: Equatable, Sendable {
 		else {
 			return nil
 		}
-
 		self.endpoint = endpoint
 		self.publishableKey = publishableKey
 	}
@@ -54,7 +54,6 @@ nonisolated struct ChatLLMConfiguration: Equatable, Sendable {
 		else {
 			return nil
 		}
-
 		self.init(
 			endpoint: payload.endpoint,
 			publishableKey: payload.publishableKey

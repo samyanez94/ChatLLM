@@ -10,7 +10,7 @@ nonisolated protocol ChatLLMResponseCreating: Sendable {
 	func createResponse(
 		provider: String,
 		model: String,
-		input: String,
+		messages: [ChatLLMRequestMessage],
 		continuationId: String?
 	) async throws -> ChatLLMResponse
 }

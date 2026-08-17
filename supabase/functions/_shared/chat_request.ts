@@ -2,10 +2,17 @@ import { ChatAPIError } from "./errors.ts";
 
 export const maximumInputBytes = 32 * 1024;
 
+export type ChatMessageRole = "user" | "assistant";
+
+export interface ChatMessage {
+  role: ChatMessageRole;
+  content: string;
+}
+
 export interface ChatRequest {
   provider: string;
   model: string;
-  input: string;
+  messages: ChatMessage[];
   continuationId?: string;
 }
 
@@ -17,22 +24,52 @@ export function parseChatRequest(value: unknown): ChatRequest {
 
   const provider = requiredNonEmptyString(value, "provider");
   const model = requiredNonEmptyString(value, "model");
-  const input = requiredNonEmptyString(value, "input", true);
+  const messages = requiredMessages(value.messages);
   const continuationId = optionalNonEmptyString(value, "continuation_id");
 
-  if (new TextEncoder().encode(input).byteLength > maximumInputBytes) {
+  const inputBytes = messages.reduce(
+    (total, message) =>
+      total + new TextEncoder().encode(message.content).byteLength,
+    0,
+  );
+  if (inputBytes > maximumInputBytes) {
     throw new ChatAPIError(
       "input_too_large",
-      `Input must not exceed ${maximumInputBytes} UTF-8 bytes.`,
+      `Message content must not exceed ${maximumInputBytes} UTF-8 bytes.`,
     );
   }
 
   return {
     provider,
     model,
-    input,
+    messages,
     ...(continuationId === undefined ? {} : { continuationId }),
   };
+}
+
+function requiredMessages(value: unknown): ChatMessage[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw invalidRequest("Field 'messages' must be a non-empty array.");
+  }
+
+  const messages = value.map((message, index) => {
+    if (!isRecord(message)) {
+      throw invalidRequest(`Message at index ${index} must be an object.`);
+    }
+    if (message.role !== "user" && message.role !== "assistant") {
+      throw invalidRequest(
+        `Message at index ${index} must have role 'user' or 'assistant'.`,
+      );
+    }
+    const role: ChatMessageRole = message.role;
+    const content = requiredNonEmptyString(message, "content", true);
+    return { role, content };
+  });
+
+  if (messages.at(-1)?.role !== "user") {
+    throw invalidRequest("The final message must have role 'user'.");
+  }
+  return messages;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

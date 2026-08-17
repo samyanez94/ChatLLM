@@ -4,9 +4,16 @@ const openAIModels: ReadonlySet<string> = new Set([
   "gpt-5.6-sol",
 ]);
 
+const anthropicModels: ReadonlySet<string> = new Set([
+  "claude-opus-5",
+  "claude-sonnet-5",
+  "claude-haiku-4-5",
+]);
+
 /** Provider and model combinations accepted by the Chat API. */
 export const supportedModels = {
   openai: openAIModels,
+  anthropic: anthropicModels,
 } as const satisfies Readonly<Record<string, ReadonlySet<string>>>;
 
 export type SupportedProvider = keyof typeof supportedModels;

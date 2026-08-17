@@ -19,11 +19,11 @@ and hosted models, with all the provider-specific plumbing tucked out of sight.
 ## Features
 
 - Chat with Apple's on-device Foundation Model on supported devices.
-- Chat with supported OpenAI models through a Supabase Edge Function.
+- Chat with supported OpenAI and Anthropic models through a Supabase Edge Function.
 - Choose models grouped by provider, with short descriptions and availability
   information.
 - Persist chat history locally and restore conversations across app launches.
-- Continue multi-turn hosted conversations using opaque response identifiers.
+- Continue hosted conversations using local transcripts and provider continuations when available.
 - Surface safe backend errors and request identifiers for troubleshooting.
 - Cover the client and backend contract with Swift Testing and Deno tests.
 
@@ -46,12 +46,12 @@ There are two main pieces:
   contract, keeps provider credentials on the server, and calls the selected
   hosted model.
 
-For hosted models, the app sends the provider, model, message, and optional
-continuation ID to the backend. The backend gets the final say on which
+For hosted models, the app sends the provider, model, local transcript, and
+optional continuation ID to the backend. The backend gets the final say on which
 provider and model combinations are supported.
 
 The app stores chats and messages locally with SwiftData. It also persists the
-opaque continuation IDs needed to resume hosted conversations. On-device
+opaque continuation IDs that can optimize supported hosted conversations. On-device
 Foundation Models sessions are reconstructed from their saved transcripts when
 the app launches again.
 
@@ -66,8 +66,11 @@ The current lineup includes:
 - GPT-5.6 Luna — the fast and economical OpenAI option.
 - GPT-5.6 Terra — the balanced OpenAI option.
 - GPT-5.6 Sol — the most capable OpenAI option in the current catalog.
+- Claude Opus 5 — Anthropic's powerful option for complex coding and knowledge work.
+- Claude Sonnet 5 — Anthropic's balanced option for everyday conversations.
+- Claude Haiku 4.5 — Anthropic's fastest option for simple and frequent tasks.
 
-The OpenAI models need the ChatLLM backend to be configured. The Apple model
+The hosted models need the ChatLLM backend to be configured. The Apple model
 depends on the device supporting Apple Intelligence, having it enabled, and
 the model being ready.
 
@@ -76,7 +79,7 @@ the model being ready.
 - Xcode with the iOS 26.5 SDK or newer.
 - An iOS 26.5 simulator or device.
 - An Apple Intelligence-capable device to use the on-device model.
-- A Supabase project and OpenAI API key to use hosted OpenAI models.
+- A Supabase project and the corresponding provider API keys to use hosted models.
 - Supabase CLI and Deno when developing or testing the backend locally.
 
 ## Getting Started
@@ -95,7 +98,7 @@ the model being ready.
 
 The local configuration file is ignored by Git. The Supabase publishable key
 is okay to include in a client app, but Supabase secret credentials and the
-OpenAI API key should never be added to the iOS project.
+OpenAI and Anthropic API keys should never be added to the iOS project.
 
 You can still run the app without any backend configuration. The hosted models
 will show up as unavailable, but the Apple Foundation Model will work if the
@@ -103,12 +106,14 @@ device supports it.
 
 ## Backend Setup
 
-To use the hosted models, link the repo to a Supabase project, add the OpenAI
-secret, and deploy the chat function:
+To use the hosted models, link the repo to a Supabase project, add the provider
+secrets, and deploy the chat function:
 
 ```sh
 supabase link --project-ref <project-ref>
-supabase secrets set OPENAI_API_KEY=<openai-api-key>
+supabase secrets set \
+  OPENAI_API_KEY=<openai-api-key> \
+  ANTHROPIC_API_KEY=<anthropic-api-key>
 supabase functions deploy chat
 ```
 
@@ -138,7 +143,7 @@ cd supabase/functions/chat
 deno test --allow-env --allow-net ../_shared
 ```
 
-The backend tests use fake provider responses, so they don't make live OpenAI
+The backend tests use fake provider responses, so they don't make live provider
 requests.
 
 ## Current Limitations
