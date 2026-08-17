@@ -33,9 +33,7 @@ final class ChatViewModel: Identifiable {
 	init(
 		id: UUID = UUID(),
 		provider: any ChatProviding = FoundationModelsChatService(),
-		messages: [ChatMessage] = [
-			ChatMessage(text: "Hi! How can I help?", role: .assistant)
-		]
+		messages: [ChatMessage] = []
 	) {
 		self.id = id
 		self.provider = provider
@@ -88,7 +86,9 @@ final class ChatViewModel: Identifiable {
 
 		let message = trimmedDraft
 
-		messages.append(ChatMessage(text: message, role: .user))
+		messages.append(
+			ChatMessage(sequence: nextMessageSequence, text: message, role: .user)
+		)
 		updatedAt = .now
 		draft = ""
 		isResponding = true
@@ -99,7 +99,7 @@ final class ChatViewModel: Identifiable {
 		do {
 			let reply = try await provider.generateReply(to: message)
 			messages.append(
-				ChatMessage(text: reply, role: .assistant)
+				ChatMessage(sequence: nextMessageSequence, text: reply, role: .assistant)
 			)
 			updatedAt = .now
 		} catch is CancellationError {
@@ -111,6 +111,10 @@ final class ChatViewModel: Identifiable {
 
 	private var trimmedDraft: String {
 		draft.trimmingCharacters(in: .whitespacesAndNewlines)
+	}
+
+	private var nextMessageSequence: Int {
+		(messages.map(\.sequence).max() ?? -1) + 1
 	}
 
 	private func userFacingMessage(for error: any Error) -> String {

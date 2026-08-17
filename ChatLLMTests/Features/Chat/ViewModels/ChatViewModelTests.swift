@@ -21,6 +21,7 @@ struct ChatViewModelTests {
 
 		#expect(provider.receivedMessages == ["Hello"])
 		#expect(viewModel.messages.map(\.text) == ["Hello", "Hello back"])
+		#expect(viewModel.messages.map(\.sequence) == [0, 1])
 		#expect(viewModel.draft.isEmpty)
 		#expect(viewModel.isResponding == false)
 		#expect(viewModel.errorMessage == nil)

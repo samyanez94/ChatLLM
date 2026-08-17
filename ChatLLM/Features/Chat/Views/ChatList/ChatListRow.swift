@@ -35,8 +35,12 @@ struct ChatListRow: View {
 		ChatListRow(
 			chat: ChatViewModel(
 				messages: [
-					ChatMessage(text: "Help me plan a trip", role: .user),
-					ChatMessage(text: "Where would you like to go?", role: .assistant)
+					ChatMessage(sequence: 0, text: "Help me plan a trip", role: .user),
+					ChatMessage(
+						sequence: 1,
+						text: "Where would you like to go?",
+						role: .assistant
+					)
 				]
 			)
 		)

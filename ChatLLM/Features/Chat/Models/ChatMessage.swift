@@ -30,7 +30,7 @@ final class ChatMessage {
 
 	init(
 		id: UUID = UUID(),
-		sequence: Int = 0,
+		sequence: Int,
 		text: String,
 		role: ChatMessageRole,
 		createdAt: Date = .now,
