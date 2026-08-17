@@ -11,10 +11,7 @@ struct ModelSelectionRow: View {
 
 	var body: some View {
 		HStack(spacing: 12) {
-			Image(systemName: model.availability.isAvailable ? "cpu" : "exclamationmark.triangle.fill")
-				.foregroundStyle(.secondary)
-				.accessibilityHidden(true)
-
+			ProviderLogo(providerId: model.providerId)
 			VStack(alignment: .leading, spacing: 3) {
 				Text(model.displayName)
 					.font(.headline)

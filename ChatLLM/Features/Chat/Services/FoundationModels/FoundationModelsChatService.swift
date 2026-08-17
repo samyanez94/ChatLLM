@@ -8,7 +8,9 @@ import FoundationModels
 
 /// Generates chat responses using Apple's on-device Foundation Models framework.
 final class FoundationModelsChatService: ChatProviding {
+
 	static let providerId = "apple"
+
 	static let modelId = "apple-foundation-model"
 
 	private let foundationModel: SystemLanguageModel

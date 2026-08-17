@@ -16,10 +16,7 @@ struct ChatView: View {
 
 	var body: some View {
 		@Bindable var viewModel = viewModel
-
 		VStack(spacing: 0) {
-			ChatHeaderView(model: viewModel.model)
-			Divider()
 			MessageList(
 				messages: viewModel.messages,
 				isResponding: viewModel.isResponding
@@ -32,6 +29,7 @@ struct ChatView: View {
 			)
 		}
 		.navigationTitle("Chat")
+		.navigationSubtitle(viewModel.model.displayName)
 		.navigationBarTitleDisplayMode(.inline)
 		.alert("Something went wrong", isPresented: $viewModel.isShowingError) {
 		} message: {
