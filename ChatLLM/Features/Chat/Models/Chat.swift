@@ -44,4 +44,27 @@ final class Chat {
 		self.updatedAt = updatedAt
 		self.messages = messages
 	}
+
+	/// Appends a message and records it as the chat's latest activity.
+	@discardableResult
+	func appendMessage(
+		text: String,
+		role: ChatMessageRole,
+		createdAt: Date = .now
+	) -> ChatMessage {
+		let message = ChatMessage(
+			sequence: nextMessageSequence,
+			text: text,
+			role: role,
+			createdAt: createdAt,
+			chat: self
+		)
+		messages.append(message)
+		updatedAt = createdAt
+		return message
+	}
+
+	private var nextMessageSequence: Int {
+		(messages.map(\.sequence).max() ?? -1) + 1
+	}
 }

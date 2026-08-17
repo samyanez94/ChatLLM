@@ -45,9 +45,13 @@ final class ChatListViewModel {
 		else {
 			return nil
 		}
-		let chat = ChatViewModel(provider: provider)
-		chats.append(chat)
-		return chat
+		let chat = Chat(
+			providerId: provider.model.providerId,
+			modelId: provider.model.id
+		)
+		let chatViewModel = ChatViewModel(chat: chat, provider: provider)
+		chats.append(chatViewModel)
+		return chatViewModel
 	}
 
 	/// Finds a chat by its stable identifier.

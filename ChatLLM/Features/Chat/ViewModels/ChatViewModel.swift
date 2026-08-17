@@ -10,17 +10,11 @@ import Observation
 /// Represents one chat and coordinates its conversation with a fixed model provider.
 @Observable
 final class ChatViewModel: Identifiable {
-	/// The stable identifier for this conversation.
-	let id: UUID
+	/// The persisted chat coordinated by this view model.
+	let chat: Chat
 
 	/// The message currently being composed by the user.
 	var draft = ""
-
-	/// The messages currently displayed in the conversation.
-	private(set) var messages: [ChatMessage]
-
-	/// The date of the conversation's most recent message.
-	private(set) var updatedAt: Date
 
 	/// Whether the provider is generating a reply.
 	private(set) var isResponding = false
@@ -30,15 +24,45 @@ final class ChatViewModel: Identifiable {
 
 	private let provider: any ChatProviding
 
-	init(
+	/// Creates a view model for an existing persisted chat.
+	init(chat: Chat, provider: any ChatProviding) {
+		self.chat = chat
+		self.provider = provider
+	}
+
+	/// Creates a new chat for previews, tests, and session-only callers.
+	convenience init(
 		id: UUID = UUID(),
 		provider: any ChatProviding = FoundationModelsChatService(),
 		messages: [ChatMessage] = []
 	) {
-		self.id = id
-		self.provider = provider
-		self.messages = messages
-		self.updatedAt = .now
+		let now = Date.now
+		self.init(
+			chat: Chat(
+				id: id,
+				providerId: provider.model.providerId,
+				modelId: provider.model.id,
+				createdAt: now,
+				updatedAt: messages.map(\.createdAt).max() ?? now,
+				messages: messages
+			),
+			provider: provider
+		)
+	}
+
+	/// The stable identifier for this conversation.
+	var id: Chat.ID {
+		chat.id
+	}
+
+	/// The messages currently displayed in transcript order.
+	var messages: [ChatMessage] {
+		chat.messages.sorted { $0.sequence < $1.sequence }
+	}
+
+	/// The date of the conversation's most recent message.
+	var updatedAt: Date {
+		chat.updatedAt
 	}
 
 	/// Information about the model assigned to this conversation.
@@ -86,10 +110,7 @@ final class ChatViewModel: Identifiable {
 
 		let message = trimmedDraft
 
-		messages.append(
-			ChatMessage(sequence: nextMessageSequence, text: message, role: .user)
-		)
-		updatedAt = .now
+		chat.appendMessage(text: message, role: .user)
 		draft = ""
 		isResponding = true
 		defer {
@@ -98,10 +119,7 @@ final class ChatViewModel: Identifiable {
 
 		do {
 			let reply = try await provider.generateReply(to: message)
-			messages.append(
-				ChatMessage(sequence: nextMessageSequence, text: reply, role: .assistant)
-			)
-			updatedAt = .now
+			chat.appendMessage(text: reply, role: .assistant)
 		} catch is CancellationError {
 			return
 		} catch {
@@ -111,10 +129,6 @@ final class ChatViewModel: Identifiable {
 
 	private var trimmedDraft: String {
 		draft.trimmingCharacters(in: .whitespacesAndNewlines)
-	}
-
-	private var nextMessageSequence: Int {
-		(messages.map(\.sequence).max() ?? -1) + 1
 	}
 
 	private func userFacingMessage(for error: any Error) -> String {

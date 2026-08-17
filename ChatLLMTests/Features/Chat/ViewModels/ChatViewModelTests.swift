@@ -14,7 +14,11 @@ struct ChatViewModelTests {
 	@Test("Sending a message appends the user message and reply")
 	func sendsMessage() async throws {
 		let provider = StubChatProvider(result: .success("Hello back"))
-		let viewModel = ChatViewModel(provider: provider, messages: [])
+		let chat = Chat(
+			providerId: provider.model.providerId,
+			modelId: provider.model.id
+		)
+		let viewModel = ChatViewModel(chat: chat, provider: provider)
 		viewModel.draft = "  Hello  "
 
 		await viewModel.sendMessage()
@@ -22,6 +26,8 @@ struct ChatViewModelTests {
 		#expect(provider.receivedMessages == ["Hello"])
 		#expect(viewModel.messages.map(\.text) == ["Hello", "Hello back"])
 		#expect(viewModel.messages.map(\.sequence) == [0, 1])
+		#expect(chat.messages.map(\.text).sorted() == ["Hello", "Hello back"].sorted())
+		#expect(chat.messages.allSatisfy { $0.chat === chat })
 		#expect(viewModel.draft.isEmpty)
 		#expect(viewModel.isResponding == false)
 		#expect(viewModel.errorMessage == nil)
