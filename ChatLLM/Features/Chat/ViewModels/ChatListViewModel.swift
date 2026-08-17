@@ -115,25 +115,37 @@ final class ChatListViewModel {
 	/// - Parameter offsets: The positions of the chats to remove.
 	func removeChats(atOffsets offsets: IndexSet) {
 		let visibleChats = visibleChats
+		remove(
+			offsets.map { visibleChats[$0] },
+			errorMessage: "The selected chats couldn’t be deleted. Please try again."
+		)
+	}
 
-		let chatsToRemove = offsets.map { visibleChats[$0] }
+	/// Removes chats that were abandoned before the user sent a message.
+	func removeEmptyChats() {
+		remove(
+			chats.filter { !$0.hasUserMessages },
+			errorMessage: "An abandoned chat couldn’t be removed. Please try again."
+		)
+	}
 
+	private func remove(
+		_ chatsToRemove: [ChatViewModel],
+		errorMessage: String
+	) {
+		guard chatsToRemove.isEmpty == false else {
+			return
+		}
 		for chatViewModel in chatsToRemove {
 			modelContext.delete(chatViewModel.chat)
 		}
-
 		do {
 			try modelContext.save()
 			let chatIds = Set(chatsToRemove.map(\.id))
 			chats.removeAll { chatIds.contains($0.id) }
 		} catch {
 			modelContext.rollback()
-			errorMessage = "The selected chats couldn’t be deleted. Please try again."
+			self.errorMessage = errorMessage
 		}
-	}
-
-	/// Removes chats that were abandoned before the user sent a message.
-	func removeEmptyChats() {
-		chats.removeAll { !$0.hasUserMessages }
 	}
 }
