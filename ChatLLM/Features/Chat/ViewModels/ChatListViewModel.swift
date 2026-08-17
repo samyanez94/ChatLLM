@@ -15,7 +15,7 @@ final class ChatListViewModel {
 	private(set) var chats: [ChatViewModel]
 
 	/// The latest user-facing persistence error, or `nil` when none is presented.
-	private(set) var errorMessage: String? = []
+	private(set) var errorMessage: String?
 
 	private let modelContext: ModelContext
 
@@ -27,6 +27,7 @@ final class ChatListViewModel {
 	) {
 		self.modelContext = modelContext
 		self.providerFactory = providerFactory
+		self.chats = []
 		loadChats()
 	}
 
@@ -109,8 +110,21 @@ final class ChatListViewModel {
 	/// - Parameter offsets: The positions of the chats to remove.
 	func removeChats(atOffsets offsets: IndexSet) {
 		let visibleChats = visibleChats
-		let chatIds = offsets.map { visibleChats[$0].id }
-		chats.removeAll { chatIds.contains($0.id) }
+        
+		let chatsToRemove = offsets.map { visibleChats[$0] }
+
+		for chatViewModel in chatsToRemove {
+			modelContext.delete(chatViewModel.chat)
+		}
+
+		do {
+			try modelContext.save()
+			let chatIds = Set(chatsToRemove.map(\.id))
+			chats.removeAll { chatIds.contains($0.id) }
+		} catch {
+			modelContext.rollback()
+			errorMessage = "The selected chats couldn’t be deleted. Please try again."
+		}
 	}
 
 	/// Removes chats that were abandoned before the user sent a message.
