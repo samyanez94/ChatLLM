@@ -9,13 +9,18 @@ import SwiftData
 /// Creates isolated, in-memory persistence for SwiftUI previews.
 enum PreviewContainer {
 	@MainActor
-	static func make() -> ModelContainer {
+	static func make(chats: [Chat] = []) -> ModelContainer {
 		do {
-			return try ModelContainer(
+			let container = try ModelContainer(
 				for: Schema(versionedSchema: ChatSchemaV1.self),
 				migrationPlan: ChatMigrationPlan.self,
 				configurations: ModelConfiguration(isStoredInMemoryOnly: true)
 			)
+			for chat in chats {
+				container.mainContext.insert(chat)
+			}
+			try container.mainContext.save()
+			return container
 		} catch {
 			fatalError("Failed to create the preview model container: \(error)")
 		}

@@ -8,20 +8,26 @@ import Foundation
 import Observation
 import SwiftData
 
-/// Manages the chats created during the current app session.
+/// Loads and manages the chats retained on this device.
 @Observable
 final class ChatListViewModel {
-	/// The chats in the order they were created, newest first.
+	/// The chats currently available to the app.
 	private(set) var chats: [ChatViewModel]
+
+	/// The latest user-facing persistence error, or `nil` when none is presented.
+	private(set) var errorMessage: String? = []
+
+	private let modelContext: ModelContext
 
 	private let providerFactory: any ChatProviderCreating
 
 	init(
-		providerFactory: any ChatProviderCreating = ChatProviderFactory(),
-		chats: [ChatViewModel] = []
+		modelContext: ModelContext,
+		providerFactory: any ChatProviderCreating = ChatProviderFactory()
 	) {
+		self.modelContext = modelContext
 		self.providerFactory = providerFactory
-		self.chats = chats
+		loadChats()
 	}
 
 	/// The models that can be used to create a chat.
@@ -36,13 +42,22 @@ final class ChatListViewModel {
 			.sorted { $0.updatedAt > $1.updatedAt }
 	}
 
+	/// Whether a persistence error is currently presented.
+	var isShowingError: Bool {
+		get {
+			errorMessage != nil
+		}
+		set {
+			if !newValue {
+				errorMessage = nil
+			}
+		}
+	}
+
 	/// Creates and stores a chat with a fresh provider session.
 	/// - Parameter model: The model to assign to the conversation.
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
-	func createChat(
-		using model: LanguageModel,
-		modelContext: ModelContext
-	) -> ChatViewModel? {
+	func createChat(using model: LanguageModel) -> ChatViewModel? {
 		guard model.availability.isAvailable,
 			let provider = providerFactory.makeProvider(for: model),
 			provider.model.availability.isAvailable
@@ -55,6 +70,33 @@ final class ChatListViewModel {
 		)
 		chats.append(chatViewModel)
 		return chatViewModel
+	}
+
+	private func loadChats() {
+		var descriptor = FetchDescriptor<Chat>(
+			sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
+		)
+		descriptor.relationshipKeyPathsForPrefetching = [\.messages]
+		do {
+			chats = try modelContext.fetch(descriptor).compactMap(makeViewModel)
+		} catch {
+			errorMessage = "Your saved chats couldn’t be loaded. Please restart the app and try again."
+		}
+	}
+
+	private func makeViewModel(for chat: Chat) -> ChatViewModel? {
+		guard
+			let model = providerFactory.models.first(where: {
+				$0.providerId == chat.providerId && $0.id == chat.modelId
+			}), let provider = providerFactory.makeProvider(for: model)
+		else {
+			return nil
+		}
+		return ChatViewModel(
+			chat: chat,
+			provider: provider,
+			modelContext: modelContext
+		)
 	}
 
 	/// Finds a chat by its stable identifier.

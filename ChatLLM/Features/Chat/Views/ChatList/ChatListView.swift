@@ -8,17 +8,24 @@ import SwiftData
 import SwiftUI
 
 struct ChatListView: View {
-	@Environment(\.modelContext) private var modelContext
 	@State private var viewModel: ChatListViewModel
 	@State private var path: [ChatViewModel.ID] = []
 	@State private var isSelectingModel = false
 	@State private var pendingChatId: ChatViewModel.ID?
 
-	init(viewModel: ChatListViewModel = ChatListViewModel()) {
+	init(modelContext: ModelContext) {
+		_viewModel = State(
+			initialValue: ChatListViewModel(modelContext: modelContext)
+		)
+	}
+
+	init(viewModel: ChatListViewModel) {
 		_viewModel = State(initialValue: viewModel)
 	}
 
 	var body: some View {
+		@Bindable var viewModel = viewModel
+
 		NavigationStack(path: $path) {
 			Group {
 				if viewModel.visibleChats.isEmpty {
@@ -71,6 +78,13 @@ struct ChatListView: View {
 				}
 			}
 		}
+		.alert(
+			"Chat History Unavailable",
+			isPresented: $viewModel.isShowingError
+		) {
+		} message: {
+			Text(viewModel.errorMessage ?? "")
+		}
 	}
 
 	private func presentModelSelection() {
@@ -78,10 +92,7 @@ struct ChatListView: View {
 	}
 
 	private func selectModel(_ model: LanguageModel) {
-		guard let chat = viewModel.createChat(
-			using: model,
-			modelContext: modelContext
-		) else {
+		guard let chat = viewModel.createChat(using: model) else {
 			return
 		}
 
@@ -102,29 +113,28 @@ struct ChatListView: View {
 #Preview("Empty") {
 	let container = PreviewContainer.make()
 
-	ChatListView()
+	ChatListView(modelContext: container.mainContext)
 		.modelContainer(container)
 }
 
 #Preview("Chats") {
-	let container = PreviewContainer.make()
-
-	ChatListView(
-		viewModel: ChatListViewModel(
-			chats: [
-				ChatViewModel(
-					messages: [
-						ChatMessage(sequence: 0, text: "Help me plan a trip", role: .user),
-						ChatMessage(
-							sequence: 1,
-							text: "Where would you like to go?",
-							role: .assistant
-						)
-					],
-					modelContext: container.mainContext
-				)
-			]
-		)
+	let container = PreviewContainer.make(
+		chats: [
+			Chat(
+				providerId: FoundationModelsChatService.providerId,
+				modelId: FoundationModelsChatService.modelId,
+				messages: [
+					ChatMessage(sequence: 0, text: "Help me plan a trip", role: .user),
+					ChatMessage(
+						sequence: 1,
+						text: "Where would you like to go?",
+						role: .assistant
+					)
+				]
+			)
+		]
 	)
-	.modelContainer(container)
+
+	ChatListView(modelContext: container.mainContext)
+		.modelContainer(container)
 }

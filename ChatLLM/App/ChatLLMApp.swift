@@ -24,7 +24,7 @@ struct ChatLLMApp: App {
 
 	var body: some Scene {
 		WindowGroup {
-			ChatListView()
+			ChatListView(modelContext: modelContainer.mainContext)
 		}
 		.modelContainer(modelContainer)
 	}
