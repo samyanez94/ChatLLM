@@ -34,7 +34,7 @@ struct ChatListViewModelTests {
 
 @MainActor
 private final class StubChatProvider: ChatProviding {
-	let model = ChatModel(
+	let model = LanguageModel(
 		id: "test-model",
 		displayName: "Test Model",
 		providerId: "test-provider",
@@ -54,11 +54,11 @@ private final class StubChatProvider: ChatProviding {
 private struct StubChatProviderFactory: ChatProviderCreating {
 	let provider: StubChatProvider
 
-	var models: [ChatModel] {
+	var models: [LanguageModel] {
 		[provider.model]
 	}
 
-	func makeProvider(for model: ChatModel) -> (any ChatProviding)? {
+	func makeProvider(for model: LanguageModel) -> (any ChatProviding)? {
 		model.providerId == provider.model.providerId && model.id == provider.model.id
 			? provider : nil
 	}

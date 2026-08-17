@@ -54,7 +54,7 @@ struct ChatProviderFactoryTests {
 		"The factory creates each OpenAI provider when configured",
 		arguments: OpenAIModelCatalog.modelIds
 	)
-	func createsOpenAIProvider(modelId: ChatModel.ID) throws {
+	func createsOpenAIProvider(modelId: LanguageModel.ID) throws {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
@@ -70,7 +70,7 @@ struct ChatProviderFactoryTests {
 		"The factory rejects each OpenAI provider without configuration",
 		arguments: OpenAIModelCatalog.modelIds
 	)
-	func rejectsOpenAIProviderWithoutConfiguration(modelId: ChatModel.ID) {
+	func rejectsOpenAIProviderWithoutConfiguration(modelId: LanguageModel.ID) {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: nil
 		)
@@ -108,7 +108,7 @@ struct ChatProviderFactoryTests {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
 		)
-		let model = ChatModel(
+		let model = LanguageModel(
 			id: "unknown-model",
 			displayName: "Unknown",
 			providerId: OpenAIModelCatalog.providerId,

@@ -24,7 +24,7 @@ final class ChatListViewModel {
 	}
 
 	/// The models that can be used to create a chat.
-	var models: [ChatModel] {
+	var models: [LanguageModel] {
 		providerFactory.models
 	}
 
@@ -38,7 +38,7 @@ final class ChatListViewModel {
 	/// Creates and stores a chat with a fresh provider session.
 	/// - Parameter model: The model to assign to the conversation.
 	/// - Returns: The created chat, or `nil` when the model cannot be used.
-	func createChat(using model: ChatModel) -> ChatViewModel? {
+	func createChat(using model: LanguageModel) -> ChatViewModel? {
 		guard model.availability.isAvailable,
 			let provider = providerFactory.makeProvider(for: model),
 			provider.model.availability.isAvailable

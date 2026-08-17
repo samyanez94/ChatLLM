@@ -15,7 +15,7 @@ struct ChatLLMChatServiceTests {
 		"The first reply forwards the selected OpenAI model",
 		arguments: OpenAIModelCatalog.modelIds
 	)
-	func firstReply(modelId: ChatModel.ID) async throws {
+	func firstReply(modelId: LanguageModel.ID) async throws {
 		let client = StubChatLLMClient(
 			responses: [
 				makeResponse(id: "response-1", text: "First reply", modelId: modelId)
@@ -88,15 +88,15 @@ struct ChatLLMChatServiceTests {
 	}
 
 	private func makeModel(
-		id: ChatModel.ID = OpenAIModelCatalog.lunaId
-	) throws -> ChatModel {
+		id: LanguageModel.ID = OpenAIModelCatalog.lunaId
+	) throws -> LanguageModel {
 		try #require(OpenAIModelCatalog.model(withId: id, isConfigured: true))
 	}
 
 	private func makeResponse(
 		id: String,
 		text: String,
-		modelId: ChatModel.ID = OpenAIModelCatalog.lunaId
+		modelId: LanguageModel.ID = OpenAIModelCatalog.lunaId
 	) -> ChatLLMResponse {
 		ChatLLMResponse(
 			provider: "openai",

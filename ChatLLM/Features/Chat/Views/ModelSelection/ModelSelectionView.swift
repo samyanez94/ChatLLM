@@ -9,8 +9,8 @@ import SwiftUI
 struct ModelSelectionView: View {
 	@Environment(\.dismiss) private var dismiss
 
-	let models: [ChatModel]
-	let selectModel: (ChatModel) -> Void
+	let models: [LanguageModel]
+	let selectModel: (LanguageModel) -> Void
 
 	var body: some View {
 		NavigationStack {
@@ -53,7 +53,7 @@ struct ModelSelectionView: View {
 		models.first { $0.providerId == providerId }?.providerName ?? providerId
 	}
 
-	private func models(for providerId: String) -> [ChatModel] {
+	private func models(for providerId: String) -> [LanguageModel] {
 		models.filter { $0.providerId == providerId }
 	}
 }

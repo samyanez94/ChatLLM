@@ -13,15 +13,15 @@ struct ChatProviderFactory: ChatProviderCreating {
 	}
 
 	/// The models supported by the app.
-	var models: [ChatModel] {
+	var models: [LanguageModel] {
 		[FoundationModelsChatService().model]
 			+ OpenAIModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
 	}
 
 	/// Creates a fresh provider session for a supported model.
-	func makeProvider(for selectedModel: ChatModel) -> (any ChatProviding)? {
+	func makeProvider(for selectedModel: LanguageModel) -> (any ChatProviding)? {
 		if selectedModel.providerId == FoundationModelsChatService.providerId,
-			selectedModel.id == FoundationModelsChatService.modelID
+			selectedModel.id == FoundationModelsChatService.modelId
 		{
 			return FoundationModelsChatService()
 		}

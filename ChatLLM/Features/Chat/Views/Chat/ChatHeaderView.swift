@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct ChatHeaderView: View {
-	let model: ChatModel
+	let model: LanguageModel
 
 	var body: some View {
 		Label {
@@ -26,7 +26,7 @@ struct ChatHeaderView: View {
 
 #Preview {
 	ChatHeaderView(
-		model: ChatModel(
+		model: LanguageModel(
 			id: "preview-model",
 			displayName: "Apple Foundation Model",
 			providerId: "apple",

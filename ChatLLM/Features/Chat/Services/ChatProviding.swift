@@ -7,7 +7,7 @@
 /// A provider capable of generating chat responses with a language model.
 protocol ChatProviding {
 	/// Information about the provider's active model.
-	var model: ChatModel { get }
+	var model: LanguageModel { get }
 
 	/// Generates a reply to a user message.
 	/// - Parameter message: The user's message.

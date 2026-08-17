@@ -1,11 +1,11 @@
 //
-//  ChatModel.swift
-//  ChatModel
+//  LanguageModel.swift
+//  LanguageModel
 //
 //  Created by Samuel Yanez on 8/14/26.
 
-/// Descriptive information about a model that can participate in a chat.
-struct ChatModel: Identifiable {
+/// Descriptive information about a language model that can participate in a chat.
+struct LanguageModel: Identifiable {
 	/// The stable identifier used to select this model.
 	let id: String
 
@@ -22,5 +22,5 @@ struct ChatModel: Identifiable {
 	let summary: String
 
 	/// The model's current ability to generate a response.
-	let availability: ChatModelAvailability
+	let availability: LanguageModelAvailability
 }

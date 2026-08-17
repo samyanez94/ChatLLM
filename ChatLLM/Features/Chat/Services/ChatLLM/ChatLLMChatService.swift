@@ -12,12 +12,12 @@ final class ChatLLMChatService: ChatProviding {
 	private var isGenerating = false
 
 	/// Information about the OpenAI model used by this conversation.
-	let model: ChatModel
+	let model: LanguageModel
 
 	/// Creates a live ChatLLM conversation when backend configuration is available.
 	init?(
 		configuration: ChatLLMConfiguration? = ChatLLMConfiguration(),
-		model: ChatModel
+		model: LanguageModel
 	) {
 		guard let configuration else {
 			return nil
@@ -29,7 +29,7 @@ final class ChatLLMChatService: ChatProviding {
 	/// Creates a ChatLLM conversation with an injected response client.
 	init(
 		client: any ChatLLMResponseCreating,
-		model: ChatModel
+		model: LanguageModel
 	) {
 		self.client = client
 		self.model = model

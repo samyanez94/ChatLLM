@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct ModelSelectionRow: View {
-	let model: ChatModel
+	let model: LanguageModel
 
 	var body: some View {
 		HStack(spacing: 12) {

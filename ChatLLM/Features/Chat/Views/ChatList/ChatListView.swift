@@ -75,7 +75,7 @@ struct ChatListView: View {
 		isSelectingModel = true
 	}
 
-	private func selectModel(_ model: ChatModel) {
+	private func selectModel(_ model: LanguageModel) {
 		guard let chat = viewModel.createChat(using: model) else {
 			return
 		}

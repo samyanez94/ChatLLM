@@ -7,10 +7,10 @@
 /// Creates fresh provider sessions for the models supported by the app.
 protocol ChatProviderCreating {
 	/// The models supported by the app.
-	var models: [ChatModel] { get }
+	var models: [LanguageModel] { get }
 
 	/// Creates a fresh provider session for a model.
 	/// - Parameter model: The requested model and its stable provider identity.
 	/// - Returns: A provider for the model, or `nil` when the identifier is unsupported.
-	func makeProvider(for model: ChatModel) -> (any ChatProviding)?
+	func makeProvider(for model: LanguageModel) -> (any ChatProviding)?
 }

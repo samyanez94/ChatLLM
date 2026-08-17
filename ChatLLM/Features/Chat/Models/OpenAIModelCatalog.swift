@@ -25,7 +25,7 @@ enum OpenAIModelCatalog {
 	/// Creates metadata for every supported OpenAI model.
 	static func models(
 		isConfigured: Bool = ChatLLMConfiguration() != nil
-	) -> [ChatModel] {
+	) -> [LanguageModel] {
 		[
 			model(
 				id: lunaId,
@@ -50,19 +50,19 @@ enum OpenAIModelCatalog {
 
 	/// Returns metadata for a supported OpenAI model identifier.
 	static func model(
-		withId modelId: ChatModel.ID,
+		withId modelId: LanguageModel.ID,
 		isConfigured: Bool = ChatLLMConfiguration() != nil
-	) -> ChatModel? {
+	) -> LanguageModel? {
 		models(isConfigured: isConfigured).first { $0.id == modelId }
 	}
 
 	private static func model(
-		id: ChatModel.ID,
+		id: LanguageModel.ID,
 		displayName: String,
 		summary: String,
 		isConfigured: Bool
-	) -> ChatModel {
-		ChatModel(
+	) -> LanguageModel {
+		LanguageModel(
 			id: id,
 			displayName: displayName,
 			providerId: providerId,
@@ -74,7 +74,7 @@ enum OpenAIModelCatalog {
 
 	private static func availability(
 		isConfigured: Bool
-	) -> ChatModelAvailability {
+	) -> LanguageModelAvailability {
 		guard isConfigured else {
 			return .unavailable(
 				message: "Add the ChatLLM backend configuration to use this model."

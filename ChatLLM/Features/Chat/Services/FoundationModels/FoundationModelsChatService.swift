@@ -9,7 +9,7 @@ import FoundationModels
 /// Generates chat responses using Apple's on-device Foundation Models framework.
 final class FoundationModelsChatService: ChatProviding {
 	static let providerId = "apple"
-	static let modelID = "apple-foundation-model"
+	static let modelId = "apple-foundation-model"
 
 	private let foundationModel: SystemLanguageModel
 
@@ -20,9 +20,9 @@ final class FoundationModelsChatService: ChatProviding {
 	}
 
 	/// Information about the active Apple Foundation Model.
-	var model: ChatModel {
-		ChatModel(
-			id: Self.modelID,
+	var model: LanguageModel {
+		LanguageModel(
+			id: Self.modelId,
 			displayName: "Apple Foundation Model",
 			providerId: Self.providerId,
 			providerName: "Apple",
@@ -36,7 +36,7 @@ final class FoundationModelsChatService: ChatProviding {
 		try await session.respond(to: message).content
 	}
 
-	private var availability: ChatModelAvailability {
+	private var availability: LanguageModelAvailability {
 		switch foundationModel.availability {
 		case .available:
 			.available

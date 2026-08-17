@@ -44,7 +44,7 @@ final class ChatViewModel: Identifiable {
 	}
 
 	/// Information about the model assigned to this conversation.
-	var model: ChatModel {
+	var model: LanguageModel {
 		provider.model
 	}
 

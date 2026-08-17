@@ -70,7 +70,7 @@ struct ChatViewModelTests {
 
 @MainActor
 private final class StubChatProvider: ChatProviding {
-	let model = ChatModel(
+	let model = LanguageModel(
 		id: "test-model",
 		displayName: "Test Model",
 		providerId: "test-provider",
