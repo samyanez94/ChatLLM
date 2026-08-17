@@ -22,10 +22,10 @@ Deno.test("creates an OpenAI response request", async () => {
   const response = await createOpenAIResponse(
     { ...request, continuationId: "resp_previous" },
     "request-123",
-    dependencies(async (input, init) => {
+    dependencies((input, init) => {
       capturedInput = input;
       capturedInit = init;
-      return openAISuccessResponse();
+      return Promise.resolve(openAISuccessResponse());
     }),
   );
 
@@ -48,9 +48,9 @@ Deno.test("omits previous_response_id without a continuation", async () => {
   await createOpenAIResponse(
     request,
     "request-123",
-    dependencies(async (_input, init) => {
+    dependencies((_input, init) => {
       capturedBody = JSON.parse(String(init?.body));
-      return openAISuccessResponse();
+      return Promise.resolve(openAISuccessResponse());
     }),
   );
 
@@ -64,13 +64,15 @@ Deno.test("combines output text content", async () => {
   const response = await createOpenAIResponse(
     request,
     "request-123",
-    dependencies(async () => Response.json({
-      id: "resp_123",
-      output: [
-        { content: [{ type: "output_text", text: "Hello " }] },
-        { content: [{ type: "output_text", text: "world" }] },
-      ],
-    })),
+    dependencies(() =>
+      Promise.resolve(Response.json({
+        id: "resp_123",
+        output: [
+          { content: [{ type: "output_text", text: "Hello " }] },
+          { content: [{ type: "output_text", text: "world" }] },
+        ],
+      }))
+    ),
   );
   assertEquals(response.outputText, "Hello world");
 });
@@ -83,56 +85,68 @@ for (
   ] as const
 ) {
   Deno.test(`translates ${name}`, async () => {
-    const error = await captureError(() => createOpenAIResponse(
-      { ...request, continuationId },
-      "request-123",
-      dependencies(async () => new Response(null, { status })),
-    ));
+    const error = await captureError(() =>
+      createOpenAIResponse(
+        { ...request, continuationId },
+        "request-123",
+        dependencies(() => Promise.resolve(new Response(null, { status }))),
+      )
+    );
     assertChatAPIError(error, expectedCode, expectedStatus);
   });
 }
 
 Deno.test("rejects an invalid provider response", async () => {
-  const error = await captureError(() => createOpenAIResponse(
-    request,
-    "request-123",
-    dependencies(async () => Response.json({ id: "resp_123", output: [] })),
-  ));
+  const error = await captureError(() =>
+    createOpenAIResponse(
+      request,
+      "request-123",
+      dependencies(() =>
+        Promise.resolve(Response.json({ id: "resp_123", output: [] }))
+      ),
+    )
+  );
   assertChatAPIError(error, "provider_error", 502);
 });
 
 Deno.test("rejects missing server configuration", async () => {
-  const error = await captureError(() => createOpenAIResponse(
-    request,
-    "request-123",
-    {
-      apiKey: undefined,
-      fetch: async () => openAISuccessResponse(),
-      timeoutMilliseconds: 1_000,
-    },
-  ));
+  const error = await captureError(() =>
+    createOpenAIResponse(
+      request,
+      "request-123",
+      {
+        apiKey: undefined,
+        fetch: () => Promise.resolve(openAISuccessResponse()),
+        timeoutMilliseconds: 1_000,
+      },
+    )
+  );
   assertChatAPIError(error, "internal_error", 500);
 });
 
 Deno.test("translates network failures", async () => {
-  const error = await captureError(() => createOpenAIResponse(
-    request,
-    "request-123",
-    dependencies(async () => {
-      throw new TypeError("Network failure");
-    }),
-  ));
+  const error = await captureError(() =>
+    createOpenAIResponse(
+      request,
+      "request-123",
+      dependencies(() => {
+        throw new TypeError("Network failure");
+      }),
+    )
+  );
   assertChatAPIError(error, "service_unavailable", 503);
 });
 
 Deno.test("translates provider timeouts", async () => {
-  const error = await captureError(() => createOpenAIResponse(
-    request,
-    "request-123",
-    dependencies(async () => {
-      throw new DOMException("Timed out", "TimeoutError");
-    }),
-  ));
+  const error = await captureError(() =>
+    createOpenAIResponse(
+      request,
+      "request-123",
+      dependencies(() => {
+        throw new DOMException("Timed out", "TimeoutError");
+      }),
+    )
+  );
   assertChatAPIError(error, "provider_timeout", 504);
 });
 

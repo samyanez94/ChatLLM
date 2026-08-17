@@ -109,13 +109,13 @@ function parseOpenAIResponse(value: unknown): OpenAIResponse | undefined {
 
   const outputText = Array.isArray(value.output)
     ? value.output
-      .flatMap((item) => isRecord(item) && Array.isArray(item.content)
-        ? item.content
-        : [])
+      .flatMap((item) =>
+        isRecord(item) && Array.isArray(item.content) ? item.content : []
+      )
       .filter((item) => isRecord(item) && item.type === "output_text")
-      .map((item) => isRecord(item) && typeof item.text === "string"
-        ? item.text
-        : "")
+      .map((item) =>
+        isRecord(item) && typeof item.text === "string" ? item.text : ""
+      )
       .join("")
     : "";
 

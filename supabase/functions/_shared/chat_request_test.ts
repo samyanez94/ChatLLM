@@ -1,7 +1,4 @@
-import {
-  maximumInputBytes,
-  parseChatRequest,
-} from "./chat_request.ts";
+import { maximumInputBytes, parseChatRequest } from "./chat_request.ts";
 import {
   assertChatAPIError,
   assertEquals,
@@ -78,10 +75,12 @@ Deno.test("accepts input at the size limit", () => {
 });
 
 Deno.test("rejects input over the size limit", async () => {
-  const error = await captureError(() => parseChatRequest({
-    provider: "openai",
-    model: "gpt-5.6-luna",
-    input: "a".repeat(maximumInputBytes + 1),
-  }));
+  const error = await captureError(() =>
+    parseChatRequest({
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      input: "a".repeat(maximumInputBytes + 1),
+    })
+  );
   assertChatAPIError(error, "input_too_large", 413);
 });
