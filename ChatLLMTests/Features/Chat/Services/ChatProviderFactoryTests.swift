@@ -103,6 +103,26 @@ struct ChatProviderFactoryTests {
 		#expect(first !== second)
 	}
 
+	@Test("The factory restores an OpenAI continuation identifier")
+	func restoresOpenAIContinuation() throws {
+		let factory = ChatProviderFactory(
+			chatLLMConfiguration: try makeConfiguration()
+		)
+		let model = try #require(
+			factory.models.first { $0.id == OpenAIModelCatalog.lunaId }
+		)
+
+		let provider = try #require(
+			factory.restoreProvider(
+				for: model,
+				messages: [],
+				continuationId: "response-1"
+			) as? ChatLLMChatService
+		)
+
+		#expect(provider.continuationId == "response-1")
+	}
+
 	@Test("Unknown model identifiers remain unsupported")
 	func rejectsUnknownModel() throws {
 		let factory = ChatProviderFactory(

@@ -13,10 +13,21 @@ final class FoundationModelsChatService: ChatProviding {
 
 	private let foundationModel: SystemLanguageModel
 
-	private lazy var session = LanguageModelSession(model: foundationModel)
+	private let session: LanguageModelSession
 
-	init(model: SystemLanguageModel = .default) {
+	init(
+		model: SystemLanguageModel = .default,
+		messages: [ChatMessage] = []
+	) {
 		self.foundationModel = model
+		if messages.isEmpty {
+			self.session = LanguageModelSession(model: model)
+		} else {
+			self.session = LanguageModelSession(
+				model: model,
+				transcript: Self.makeTranscript(from: messages)
+			)
+		}
 	}
 
 	/// Information about the active Apple Foundation Model.
@@ -34,6 +45,26 @@ final class FoundationModelsChatService: ChatProviding {
 	/// Generates a reply using the current language-model session.
 	func generateReply(to message: String) async throws -> String {
 		try await session.respond(to: message).content
+	}
+
+	static func makeTranscript(from messages: [ChatMessage]) -> Transcript {
+		let entries = messages.sorted { $0.sequence < $1.sequence }
+			.map { message in
+				let segment = Transcript.Segment.text(
+					Transcript.TextSegment(content: message.text)
+				)
+				switch message.role {
+				case .user:
+					return Transcript.Entry.prompt(
+						Transcript.Prompt(segments: [segment])
+					)
+				case .assistant:
+					return Transcript.Entry.response(
+						Transcript.Response(assetIDs: [], segments: [segment])
+					)
+				}
+			}
+		return Transcript(entries: entries)
 	}
 
 	private var availability: LanguageModelAvailability {

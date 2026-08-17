@@ -63,6 +63,25 @@ struct ChatLLMChatServiceTests {
 		#expect(requests.map(\.continuationId) == [nil, "response-1"])
 	}
 
+	@Test("A restored conversation uses its persisted continuation identifier")
+	func restoredConversationContinues() async throws {
+		let client = StubChatLLMClient(
+			responses: [makeResponse(id: "response-2", text: "Restored reply")]
+		)
+		let service = ChatLLMChatService(
+			client: client,
+			model: try makeModel(),
+			continuationId: "response-1"
+		)
+
+		let reply = try await service.generateReply(to: "Continue")
+		let requests = await client.recordedRequests
+
+		#expect(reply == "Restored reply")
+		#expect(requests.map(\.continuationId) == ["response-1"])
+		#expect(service.continuationId == "response-2")
+	}
+
 	@Test("A failed reply does not replace the last continuation identifier")
 	func failedReplyPreservesContinuation() async throws {
 		let client = StubChatLLMClient(
@@ -108,6 +127,8 @@ struct ChatLLMChatServiceTests {
 	}
 }
 
+// MARK: - StubChatLLMClient
+
 private actor StubChatLLMClient: ChatLLMResponseCreating {
 	struct Request: Equatable, Sendable {
 		let provider: String
@@ -144,6 +165,8 @@ private actor StubChatLLMClient: ChatLLMResponseCreating {
 		return try results.removeFirst().get()
 	}
 }
+
+// MARK: - TestError
 
 private enum TestError: Error {
 	case requestFailed

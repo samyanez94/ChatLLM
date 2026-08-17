@@ -13,4 +13,11 @@ protocol ChatProviderCreating {
 	/// - Parameter model: The requested model and its stable provider identity.
 	/// - Returns: A provider for the model, or `nil` when the identifier is unsupported.
 	func makeProvider(for model: LanguageModel) -> (any ChatProviding)?
+
+	/// Restores a provider session from a persisted conversation.
+	func restoreProvider(
+		for model: LanguageModel,
+		messages: [ChatMessage],
+		continuationId: String?
+	) -> (any ChatProviding)?
 }

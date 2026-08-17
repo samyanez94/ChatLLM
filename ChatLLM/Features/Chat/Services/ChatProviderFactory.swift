@@ -20,10 +20,35 @@ struct ChatProviderFactory: ChatProviderCreating {
 
 	/// Creates a fresh provider session for a supported model.
 	func makeProvider(for selectedModel: LanguageModel) -> (any ChatProviding)? {
+		makeProvider(
+			for: selectedModel,
+			messages: [],
+			continuationId: nil
+		)
+	}
+
+	/// Restores a provider session from a persisted conversation.
+	func restoreProvider(
+		for model: LanguageModel,
+		messages: [ChatMessage],
+		continuationId: String?
+	) -> (any ChatProviding)? {
+		makeProvider(
+			for: model,
+			messages: messages,
+			continuationId: continuationId
+		)
+	}
+
+	private func makeProvider(
+		for selectedModel: LanguageModel,
+		messages: [ChatMessage],
+		continuationId: String?
+	) -> (any ChatProviding)? {
 		if selectedModel.providerId == FoundationModelsChatService.providerId,
 			selectedModel.id == FoundationModelsChatService.modelId
 		{
-			return FoundationModelsChatService()
+			return FoundationModelsChatService(messages: messages)
 		}
 		guard selectedModel.providerId == OpenAIModelCatalog.providerId,
 			let model = OpenAIModelCatalog.model(
@@ -35,7 +60,8 @@ struct ChatProviderFactory: ChatProviderCreating {
 		}
 		return ChatLLMChatService(
 			configuration: chatLLMConfiguration,
-			model: model
+			model: model,
+			continuationId: continuationId
 		)
 	}
 }

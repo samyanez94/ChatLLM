@@ -60,6 +60,27 @@ struct ChatViewModelTests {
 		#expect(try modelContext.fetchCount(FetchDescriptor<ChatMessage>()) == 1)
 	}
 
+	@Test("A reply persists the provider continuation identifier")
+	func persistsContinuationIdentifier() async throws {
+		let provider = StubChatProvider(
+			result: .success("Hello back"),
+			continuationId: "response-1"
+		)
+		let container = try makeModelContainer()
+		let modelContext = container.mainContext
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: modelContext
+		)
+		viewModel.draft = "Hello"
+
+		await viewModel.sendMessage()
+		modelContext.rollback()
+
+		let chat = try #require(modelContext.fetch(FetchDescriptor<Chat>()).first)
+		#expect(chat.continuationId == "response-1")
+	}
+
 	@Test("A backend error preserves its message and request identifier")
 	func preservesBackendError() async throws {
 		let apiError = ChatLLMAPIError(
@@ -111,11 +132,17 @@ private final class StubChatProvider: ChatProviding {
 	)
 
 	private let result: Result<String, any Error>
+    
+	let continuationId: String?
 
 	private(set) var receivedMessages: [String] = []
 
-	init(result: Result<String, any Error>) {
+	init(
+		result: Result<String, any Error>,
+		continuationId: String? = nil
+	) {
 		self.result = result
+		self.continuationId = continuationId
 	}
 
 	func generateReply(to message: String) async throws -> String {

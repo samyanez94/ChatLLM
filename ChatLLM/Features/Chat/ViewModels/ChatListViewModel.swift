@@ -89,7 +89,12 @@ final class ChatListViewModel {
 		guard
 			let model = providerFactory.models.first(where: {
 				$0.providerId == chat.providerId && $0.id == chat.modelId
-			}), let provider = providerFactory.makeProvider(for: model)
+			}),
+			let provider = providerFactory.restoreProvider(
+				for: model,
+				messages: chat.messages,
+				continuationId: chat.continuationId
+			)
 		else {
 			return nil
 		}
@@ -110,7 +115,7 @@ final class ChatListViewModel {
 	/// - Parameter offsets: The positions of the chats to remove.
 	func removeChats(atOffsets offsets: IndexSet) {
 		let visibleChats = visibleChats
-        
+
 		let chatsToRemove = offsets.map { visibleChats[$0] }
 
 		for chatViewModel in chatsToRemove {

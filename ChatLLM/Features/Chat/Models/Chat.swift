@@ -25,6 +25,9 @@ final class Chat {
 	/// The date of the chat's most recent activity.
 	var updatedAt: Date
 
+	/// Opaque provider state used to resume a remote conversation.
+	var continuationId: String?
+
 	/// The messages belonging to this chat.
 	@Relationship(deleteRule: .cascade, inverse: \ChatMessage.chat)
 	var messages: [ChatMessage]
@@ -35,6 +38,7 @@ final class Chat {
 		modelId: String,
 		createdAt: Date = .now,
 		updatedAt: Date = .now,
+		continuationId: String? = nil,
 		messages: [ChatMessage] = []
 	) {
 		self.id = id
@@ -42,6 +46,7 @@ final class Chat {
 		self.modelId = modelId
 		self.createdAt = createdAt
 		self.updatedAt = updatedAt
+		self.continuationId = continuationId
 		self.messages = messages
 	}
 

@@ -8,7 +8,7 @@
 /// Maintains one OpenAI conversation through the hosted ChatLLM backend.
 final class ChatLLMChatService: ChatProviding {
 	private let client: any ChatLLMResponseCreating
-	private var continuationId: String?
+	private(set) var continuationId: String?
 	private var isGenerating = false
 
 	/// Information about the OpenAI model used by this conversation.
@@ -17,22 +17,26 @@ final class ChatLLMChatService: ChatProviding {
 	/// Creates a live ChatLLM conversation when backend configuration is available.
 	init?(
 		configuration: ChatLLMConfiguration? = ChatLLMConfiguration(),
-		model: LanguageModel
+		model: LanguageModel,
+		continuationId: String? = nil
 	) {
 		guard let configuration else {
 			return nil
 		}
 		self.client = ChatLLMClient(configuration: configuration)
 		self.model = model
+		self.continuationId = continuationId
 	}
 
 	/// Creates a ChatLLM conversation with an injected response client.
 	init(
 		client: any ChatLLMResponseCreating,
-		model: LanguageModel
+		model: LanguageModel,
+		continuationId: String? = nil
 	) {
 		self.client = client
 		self.model = model
+		self.continuationId = continuationId
 	}
 
 	/// Generates a reply and continues from the last successful backend response.

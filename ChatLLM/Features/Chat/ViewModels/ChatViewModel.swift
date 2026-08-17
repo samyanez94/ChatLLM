@@ -143,9 +143,11 @@ final class ChatViewModel: Identifiable {
 		do {
 			let reply = try await provider.generateReply(to: message)
 			chat.appendMessage(text: reply, role: .assistant)
+			chat.continuationId = provider.continuationId
 			do {
 				try modelContext.save()
 			} catch {
+				modelContext.rollback()
 				errorMessage = Self.assistantMessageSaveError
 			}
 		} catch is CancellationError {
