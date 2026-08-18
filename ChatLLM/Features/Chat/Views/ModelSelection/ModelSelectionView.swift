@@ -47,6 +47,9 @@ struct ModelSelectionView: View {
 			}
 			providerIds.append(model.providerId)
 		}
+		.sorted {
+			providerName(for: $0).localizedStandardCompare(providerName(for: $1)) == .orderedAscending
+		}
 	}
 
 	private func providerName(for providerId: String) -> String {
