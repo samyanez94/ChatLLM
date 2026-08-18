@@ -18,9 +18,10 @@ struct ChatView: View {
 				isResponding: viewModel.isResponding
 			)
 			.simultaneousGesture(
-				TapGesture().onEnded {
-					isComposerFocused = false
-				}
+				TapGesture()
+					.onEnded {
+						isComposerFocused = false
+					}
 			)
 			Divider()
 			MessageComposer(
