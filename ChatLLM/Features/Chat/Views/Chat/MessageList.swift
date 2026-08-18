@@ -7,52 +7,46 @@
 import SwiftUI
 
 struct MessageList: View {
-	private static let progressId = "generating-response"
+    private static let progressId = "generating-response"
 
-	let messages: [ChatMessage]
+    let messages: [ChatMessage]
+    
+    let isResponding: Bool
 
-	let isResponding: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-	@Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(messages) { message in
+                        MessageBubble(message: message)
+                    }
+                    if isResponding {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .id(Self.progressId)
+                            .accessibilityLabel("Generating response")
+                    }
+                }
+                .padding()
+            }
+            .defaultScrollAnchor(.bottom)
+            .onChange(of: messages.count) {
+                scrollToLatestMessage(using: proxy)
+            }
+            .onChange(of: isResponding) {
+                scrollToLatestMessage(using: proxy)
+            }
+        }
+    }
 
-	var body: some View {
-		ScrollViewReader { proxy in
-			ScrollView {
-				LazyVStack(spacing: 12) {
-					ForEach(messages) { message in
-						MessageBubble(message: message)
-							.id(message.id)
-					}
-					if isResponding {
-						ProgressView()
-							.frame(maxWidth: .infinity, alignment: .leading)
-							.id(Self.progressId)
-							.accessibilityLabel("Generating response")
-					}
-				}
-				.padding()
-			}
-			.defaultScrollAnchor(.bottom)
-			.onChange(of: messages.count) {
-				scrollToLatestMessage(using: proxy)
-			}
-			.onChange(of: isResponding) {
-				scrollToLatestMessage(using: proxy)
-			}
-		}
-	}
-
-	private func scrollToLatestMessage(using proxy: ScrollViewProxy) {
-		let target: AnyHashable? = isResponding ? Self.progressId : messages.last?.id
-		guard let target else {
-			return
-		}
-		if reduceMotion {
-			proxy.scrollTo(target, anchor: .bottom)
-		} else {
-			withAnimation {
-				proxy.scrollTo(target, anchor: .bottom)
-			}
-		}
-	}
+    private func scrollToLatestMessage(using proxy: ScrollViewProxy) {
+        guard let target: AnyHashable = isResponding ? Self.progressId : messages.last?.id else {
+            return
+        }
+        withAnimation(reduceMotion ? nil : .default) {
+            proxy.scrollTo(target, anchor: .bottom)
+        }
+    }
 }

@@ -8,49 +8,40 @@ import MarkdownUI
 import SwiftUI
 
 struct MessageBubble: View {
-	private static let assistantTheme = Theme.gitHub.text {
-		BackgroundColor(.clear)
-	}
+    private static let assistantTheme = Theme.gitHub.text {
+        BackgroundColor(.clear)
+    }
 
-	let message: ChatMessage
+    let message: ChatMessage
 
-	var body: some View {
-		HStack {
-			if message.role == .user {
-				Spacer(minLength: 48)
-			}
-			messageText
-				.padding(.horizontal, 14)
-				.padding(.vertical, 10)
-				.background(backgroundStyle)
-				.foregroundStyle(foregroundStyle)
-				.clipShape(.rect(cornerRadius: 18))
-			if message.role == .assistant {
-				Spacer(minLength: 48)
-			}
-		}
-	}
+    private var isUser: Bool {
+        message.role == .user
+    }
 
-	@ViewBuilder
-	private var messageText: some View {
-		if message.role == .assistant {
-			Markdown(message.text)
-				.markdownTheme(
-					Theme.gitHub.text {
-						BackgroundColor(.clear)
-					}
-				)
-		} else {
-			Text(message.text)
-				.font(.body)
-		}
-	}
+    var body: some View {
+        HStack {
+            if isUser {
+                Spacer(minLength: 48)
+            }
+            messageText
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(isUser ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.fill.tertiary), in: .rect(cornerRadius: 18))
+                .foregroundStyle(isUser ? Color.white : .primary)
+            if !isUser {
+                Spacer(minLength: 48)
+            }
+        }
+    }
 
-	private var backgroundStyle: Color {
-		message.role == .user ? .accentColor : .secondary.opacity(0.15)
-	}
-
-	private var foregroundStyle: Color {
-		message.role == .user ? .white : .primary
-	}
+    @ViewBuilder
+    private var messageText: some View {
+        if isUser {
+            Text(message.text)
+                .font(.body)
+        } else {
+            Markdown(message.text)
+                .markdownTheme(Self.assistantTheme)
+        }
+    }
 }

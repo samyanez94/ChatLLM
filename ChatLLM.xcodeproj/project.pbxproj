@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9120020B3033F6DA004D49B5 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 9120020A3033F6DA004D49B5 /* OrderedCollections */; };
 		A10000000000000000000001 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000003 /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9120020B3033F6DA004D49B5 /* OrderedCollections in Frameworks */,
 				A10000000000000000000001 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,6 +98,7 @@
 			name = ChatLLM;
 			packageProductDependencies = (
 				A10000000000000000000003 /* MarkdownUI */,
+				9120020A3033F6DA004D49B5 /* OrderedCollections */,
 			);
 			productName = ChatLLM;
 			productReference = 919237C0302FA64F0026C317 /* ChatLLM.app */;
@@ -154,6 +157,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				912002093033F6DA004D49B5 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 919237C1302FA64F0026C317 /* Products */;
@@ -473,6 +477,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		912002093033F6DA004D49B5 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.0;
+			};
+		};
 		A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
@@ -484,6 +496,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		9120020A3033F6DA004D49B5 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 912002093033F6DA004D49B5 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
 		A10000000000000000000003 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
