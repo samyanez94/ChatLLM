@@ -12,6 +12,91 @@ import Testing
 
 @MainActor
 struct ChatViewModelTests {
+	@Test("Persisted messages are presented in transcript order")
+	func ordersMessages() throws {
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: StubChatProvider(result: .success("Unused")),
+			messages: [
+				ChatMessage(sequence: 2, text: "Third", role: .assistant),
+				ChatMessage(sequence: 0, text: "First", role: .user),
+				ChatMessage(sequence: 1, text: "Second", role: .assistant)
+			],
+			modelContext: container.mainContext
+		)
+
+		#expect(viewModel.messages.map(\.text) == ["First", "Second", "Third"])
+	}
+
+	@Test("Conversation summaries reflect their transcript")
+	func summarizesTranscript() throws {
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: StubChatProvider(result: .success("Unused")),
+			messages: [
+				ChatMessage(sequence: 2, text: "Latest", role: .assistant),
+				ChatMessage(sequence: 0, text: "Welcome", role: .assistant),
+				ChatMessage(sequence: 1, text: "My question", role: .user)
+			],
+			modelContext: container.mainContext
+		)
+
+		#expect(viewModel.title == "My question")
+		#expect(viewModel.preview == "Latest")
+		#expect(viewModel.hasUserMessages)
+	}
+
+	@Test("An empty conversation uses placeholder summaries")
+	func summarizesEmptyTranscript() throws {
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: StubChatProvider(result: .success("Unused")),
+			modelContext: container.mainContext
+		)
+
+		#expect(viewModel.title == "New Chat")
+		#expect(viewModel.preview == "No messages yet")
+		#expect(viewModel.hasUserMessages == false)
+	}
+
+	@Test("Blank drafts cannot be sent", arguments: ["", " ", "\n\t"])
+	func rejectsBlankDraft(draft: String) async throws {
+		let provider = StubChatProvider(result: .success("Unused"))
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: container.mainContext
+		)
+		viewModel.draft = draft
+
+		await viewModel.sendMessage()
+
+		#expect(viewModel.canSend == false)
+		#expect(provider.receivedMessages.isEmpty)
+		#expect(viewModel.messages.isEmpty)
+		#expect(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()) == 0)
+	}
+
+	@Test("An unavailable model cannot send a draft")
+	func rejectsUnavailableModel() async throws {
+		let provider = StubChatProvider(
+			result: .success("Unused"),
+			availability: .unavailable(message: "Unavailable")
+		)
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: container.mainContext
+		)
+		viewModel.draft = "Hello"
+
+		await viewModel.sendMessage()
+
+		#expect(viewModel.canSend == false)
+		#expect(provider.receivedMessages.isEmpty)
+		#expect(viewModel.messages.isEmpty)
+	}
+
 	@Test("Sending a message appends the user message and reply")
 	func sendsMessage() async throws {
 		let provider = StubChatProvider(result: .success("Hello back"))
@@ -107,6 +192,41 @@ struct ChatViewModelTests {
 				== "The provider rate limit has been exceeded.\n\nRequest ID: request-123"
 		)
 	}
+
+	@Test("Cancellation keeps the user message without presenting an error")
+	func handlesCancellation() async throws {
+		let provider = StubChatProvider(result: .failure(CancellationError()))
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: provider,
+			modelContext: container.mainContext
+		)
+		viewModel.draft = "Hello"
+
+		await viewModel.sendMessage()
+
+		#expect(viewModel.messages.map(\.text) == ["Hello"])
+		#expect(viewModel.errorMessage == nil)
+		#expect(viewModel.isResponding == false)
+		#expect(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()) == 1)
+	}
+
+	@Test("Dismissing an error clears it")
+	func dismissesError() async throws {
+		let container = try makeModelContainer()
+		let viewModel = ChatViewModel(
+			provider: StubChatProvider(result: .failure(TestError.responseFailed)),
+			modelContext: container.mainContext
+		)
+		viewModel.draft = "Hello"
+		await viewModel.sendMessage()
+		try #require(viewModel.isShowingError)
+
+		viewModel.isShowingError = false
+
+		#expect(viewModel.errorMessage == nil)
+		#expect(viewModel.isShowingError == false)
+	}
 }
 
 @MainActor
@@ -122,14 +242,7 @@ private func makeModelContainer() throws -> ModelContainer {
 
 @MainActor
 private final class StubChatProvider: ChatProviding {
-	let model = LanguageModel(
-		id: "test-model",
-		displayName: "Test Model",
-		providerId: "test-provider",
-		providerName: "Test Provider",
-		summary: "A model used in tests.",
-		availability: .available
-	)
+	let model: LanguageModel
 
 	private let result: Result<String, any Error>
 
@@ -139,8 +252,17 @@ private final class StubChatProvider: ChatProviding {
 
 	init(
 		result: Result<String, any Error>,
-		continuationId: String? = nil
+		continuationId: String? = nil,
+		availability: LanguageModelAvailability = .available
 	) {
+		self.model = LanguageModel(
+			id: "test-model",
+			displayName: "Test Model",
+			providerId: "test-provider",
+			providerName: "Test Provider",
+			summary: "A model used in tests.",
+			availability: availability
+		)
 		self.result = result
 		self.continuationId = continuationId
 	}

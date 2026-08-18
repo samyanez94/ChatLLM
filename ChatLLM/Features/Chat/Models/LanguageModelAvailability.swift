@@ -10,10 +10,7 @@ enum LanguageModelAvailability: Equatable {
 	case unavailable(message: String)
 
 	var isAvailable: Bool {
-		if case .available = self {
-			return true
-		}
-		return false
+		self == .available
 	}
 
 	var unavailableMessage: String? {

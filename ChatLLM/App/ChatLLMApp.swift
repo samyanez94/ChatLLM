@@ -12,13 +12,27 @@ struct ChatLLMApp: App {
 	private let modelContainer: ModelContainer
 
 	init() {
+		self.init(
+			makeModelContainer: {
+				try ModelContainer(
+					for: Schema(versionedSchema: ChatSchemaV1.self),
+					migrationPlan: ChatMigrationPlan.self
+				)
+			},
+			onFailure: { error in
+				fatalError("Failed to create the chat model container: \(error)")
+			}
+		)
+	}
+
+	init(
+		makeModelContainer: () throws -> ModelContainer,
+		onFailure: (any Error) -> ModelContainer
+	) {
 		do {
-			modelContainer = try ModelContainer(
-				for: Schema(versionedSchema: ChatSchemaV1.self),
-				migrationPlan: ChatMigrationPlan.self
-			)
+			modelContainer = try makeModelContainer()
 		} catch {
-			fatalError("Failed to create the chat model container: \(error)")
+			modelContainer = onFailure(error)
 		}
 	}
 

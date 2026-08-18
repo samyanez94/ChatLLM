@@ -16,7 +16,7 @@ enum PreviewContainer {
 				migrationPlan: ChatMigrationPlan.self,
 				configurations: ModelConfiguration(isStoredInMemoryOnly: true)
 			)
-			for chat in chats {
+			chats.forEach { chat in
 				container.mainContext.insert(chat)
 			}
 			try container.mainContext.save()
