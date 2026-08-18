@@ -9,11 +9,13 @@ import SwiftUI
 struct MessageComposer: View {
 	@Binding var draft: String
 	let canSend: Bool
+	let isFocused: FocusState<Bool>.Binding
 	let send: () -> Void
 
 	var body: some View {
 		HStack(alignment: .bottom, spacing: 8) {
 			TextField("Message", text: $draft, axis: .vertical)
+				.focused(isFocused)
 				.lineLimit(1...5)
 				.padding(.horizontal, 16)
 				.padding(.vertical, 10)

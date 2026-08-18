@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatView: View {
 	@Bindable var viewModel: ChatViewModel
+	@FocusState private var isComposerFocused: Bool
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -16,10 +17,16 @@ struct ChatView: View {
 				messages: viewModel.messages,
 				isResponding: viewModel.isResponding
 			)
+			.simultaneousGesture(
+				TapGesture().onEnded {
+					isComposerFocused = false
+				}
+			)
 			Divider()
 			MessageComposer(
 				draft: $viewModel.draft,
 				canSend: viewModel.canSend,
+				isFocused: $isComposerFocused,
 				send: { Task { await viewModel.sendMessage() } }
 			)
 		}
