@@ -33,6 +33,11 @@ struct ChatView: View {
 		.navigationTitle("Chat")
 		.navigationSubtitle(viewModel.model.displayName)
 		.navigationBarTitleDisplayMode(.inline)
+		.onAppear {
+			if viewModel.messages.isEmpty {
+				isComposerFocused = true
+			}
+		}
 		.alert("Something went wrong", isPresented: $viewModel.isShowingError) {
 		} message: {
 			Text(viewModel.errorMessage ?? "")
