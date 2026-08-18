@@ -10,10 +10,17 @@ const anthropicModels: ReadonlySet<string> = new Set([
   "claude-haiku-4-5",
 ]);
 
+const googleModels: ReadonlySet<string> = new Set([
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+]);
+
 /** Provider and model combinations accepted by the Chat API. */
 export const supportedModels = {
   openai: openAIModels,
   anthropic: anthropicModels,
+  google: googleModels,
 } as const satisfies Readonly<Record<string, ReadonlySet<string>>>;
 
 export type SupportedProvider = keyof typeof supportedModels;

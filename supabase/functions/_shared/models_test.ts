@@ -19,6 +19,20 @@ Deno.test("recognizes Anthropic models", () => {
   }
 });
 
+Deno.test("recognizes Google Gemini models", () => {
+  assert(isSupportedProvider("google"));
+  for (
+    const model of [
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
+    ]
+  ) {
+    assert(isSupportedModel("google", model));
+  }
+  assertEquals(isSupportedModel("google", "example-model"), false);
+});
+
 Deno.test("rejects unknown providers and models", () => {
   assertEquals(isSupportedProvider("example-provider"), false);
   assertEquals(isSupportedModel("openai", "example-model"), false);

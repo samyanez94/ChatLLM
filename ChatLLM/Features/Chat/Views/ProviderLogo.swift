@@ -27,6 +27,8 @@ struct ProviderLogo: View {
 			Image(.openaiLogo)
 		case AnthropicModelCatalog.providerId:
 			Image(.anthropicLogo)
+		case GeminiModelCatalog.providerId:
+			Image(.googleLogo)
 		default:
 			Image(systemName: "questionmark.square.dashed")
 		}
@@ -38,6 +40,7 @@ struct ProviderLogo: View {
 		ProviderLogo(providerId: FoundationModelsChatService.providerId)
 		ProviderLogo(providerId: OpenAIModelCatalog.providerId)
 		ProviderLogo(providerId: AnthropicModelCatalog.providerId)
+		ProviderLogo(providerId: GeminiModelCatalog.providerId)
 		ProviderLogo(providerId: "unknown")
 	}
 	.padding()

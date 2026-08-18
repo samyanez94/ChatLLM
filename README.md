@@ -19,7 +19,7 @@ and hosted models, with all the provider-specific plumbing tucked out of sight.
 ## Features
 
 - Chat with Apple's on-device Foundation Model on supported devices.
-- Chat with supported OpenAI and Anthropic models through a Supabase Edge Function.
+- Chat with supported OpenAI, Anthropic, and Google Gemini models through a Supabase Edge Function.
 - Choose models grouped by provider, with short descriptions and availability
   information.
 - Persist chat history locally and restore conversations across app launches.
@@ -69,6 +69,9 @@ The current lineup includes:
 - Claude Opus 5 — Anthropic's powerful option for complex coding and knowledge work.
 - Claude Sonnet 5 — Anthropic's balanced option for everyday conversations.
 - Claude Haiku 4.5 — Anthropic's fastest option for simple and frequent tasks.
+- Gemini 3.6 Flash — Google's strong general-purpose option.
+- Gemini 3.5 Flash — Google's balanced option for sustained work.
+- Gemini 3.5 Flash-Lite — Google's fast and economical option.
 
 The hosted models need the ChatLLM backend to be configured. The Apple model
 depends on the device supporting Apple Intelligence, having it enabled, and
@@ -98,7 +101,7 @@ the model being ready.
 
 The local configuration file is ignored by Git. The Supabase publishable key
 is okay to include in a client app, but Supabase secret credentials and the
-OpenAI and Anthropic API keys should never be added to the iOS project.
+OpenAI, Anthropic, and Gemini API keys should never be added to the iOS project.
 
 You can still run the app without any backend configuration. The hosted models
 will show up as unavailable, but the Apple Foundation Model will work if the
@@ -113,7 +116,8 @@ secrets, and deploy the chat function:
 supabase link --project-ref <project-ref>
 supabase secrets set \
   OPENAI_API_KEY=<openai-api-key> \
-  ANTHROPIC_API_KEY=<anthropic-api-key>
+  ANTHROPIC_API_KEY=<anthropic-api-key> \
+  GEMINI_API_KEY=<gemini-api-key>
 supabase functions deploy chat
 ```
 

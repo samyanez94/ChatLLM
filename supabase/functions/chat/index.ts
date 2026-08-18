@@ -6,6 +6,7 @@ import { ChatAPIError, makeErrorResponse } from "../_shared/errors.ts";
 import { isSupportedModel, isSupportedProvider } from "../_shared/models.ts";
 import { createAnthropicResponse } from "../_shared/providers/anthropic.ts";
 import { createOpenAIResponse } from "../_shared/providers/openai.ts";
+import { createGoogleResponse } from "../_shared/providers/google.ts";
 
 export default {
   fetch: withSupabase({ auth: "publishable" }, async (request) => {
@@ -39,9 +40,10 @@ export default {
         );
       }
 
-      const providerResponse = chatRequest.provider === "openai"
-        ? await createOpenAIResponse(chatRequest, requestId)
-        : await createAnthropicResponse(chatRequest, requestId);
+      const providerResponse = await createProviderResponse(
+        chatRequest,
+        requestId,
+      );
       const response: ChatResponse = {
         provider: chatRequest.provider,
         model: chatRequest.model,
@@ -69,6 +71,25 @@ export default {
     }
   }),
 };
+
+async function createProviderResponse(
+  request: ReturnType<typeof parseChatRequest>,
+  requestId: string,
+) {
+  switch (request.provider) {
+    case "openai":
+      return await createOpenAIResponse(request, requestId);
+    case "anthropic":
+      return await createAnthropicResponse(request, requestId);
+    case "google":
+      return await createGoogleResponse(request, requestId);
+    default:
+      throw new ChatAPIError(
+        "unsupported_provider",
+        `Provider '${request.provider}' is not supported.`,
+      );
+  }
+}
 
 function hasContinuationId(
   response: { outputText: string } | { id: string; outputText: string },

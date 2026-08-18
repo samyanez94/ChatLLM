@@ -68,6 +68,25 @@ struct ChatProviderFactoryTests {
 		#expect(models.allSatisfy { $0.availability.isAvailable })
 	}
 
+	@Test("The factory includes and creates a Gemini provider")
+	func createsGeminiProvider() throws {
+		let factory = ChatProviderFactory(
+			chatLLMConfiguration: try makeConfiguration()
+		)
+		let models = factory.models.filter {
+			$0.providerId == GeminiModelCatalog.providerId
+		}
+
+		#expect(models.map(\.id) == GeminiModelCatalog.modelIds)
+		#expect(models.allSatisfy { $0.providerName == "Google" })
+		let model = try #require(
+			models.first { $0.id == GeminiModelCatalog.flash36Id }
+		)
+		let provider = try #require(factory.makeProvider(for: model))
+		#expect(provider is ChatLLMChatService)
+		#expect(provider.model.id == GeminiModelCatalog.flash36Id)
+	}
+
 	@Test(
 		"The factory creates each Anthropic provider when configured",
 		arguments: AnthropicModelCatalog.modelIds

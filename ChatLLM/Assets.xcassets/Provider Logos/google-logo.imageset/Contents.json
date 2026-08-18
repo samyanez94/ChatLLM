@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "apple-logo.svg",
+      "filename" : "google-logo.svg",
       "idiom" : "universal"
     }
   ],
@@ -9,5 +9,7 @@
     "author" : "xcode",
     "version" : 1
   },
-  "properties" : { "preserves-vector-representation" : true }
+  "properties" : {
+    "preserves-vector-representation" : true
+  }
 }

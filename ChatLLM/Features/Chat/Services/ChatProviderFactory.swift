@@ -17,6 +17,7 @@ struct ChatProviderFactory: ChatProviderCreating {
 		[FoundationModelsChatService().model]
 			+ OpenAIModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
 			+ AnthropicModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
+			+ GeminiModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
 	}
 
 	/// Creates a fresh provider session for a supported model.
@@ -60,6 +61,11 @@ struct ChatProviderFactory: ChatProviderCreating {
 			)
 		case AnthropicModelCatalog.providerId:
 			model = AnthropicModelCatalog.model(
+				withId: selectedModel.id,
+				isConfigured: chatLLMConfiguration != nil
+			)
+		case GeminiModelCatalog.providerId:
+			model = GeminiModelCatalog.model(
 				withId: selectedModel.id,
 				isConfigured: chatLLMConfiguration != nil
 			)

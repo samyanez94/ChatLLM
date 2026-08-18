@@ -38,7 +38,7 @@ included in the client or accepted as client credentials by this endpoint.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `provider` | string | Yes | Stable provider identifier: `openai` or `anthropic`. |
+| `provider` | string | Yes | Stable provider identifier: `openai`, `anthropic`, or `google`. |
 | `model` | string | Yes | Provider-specific model identifier selected by the client. |
 | `messages` | array | Yes | Non-empty transcript of `user` and `assistant` messages ending with a user message. |
 | `messages[].role` | string | Yes | Either `user` or `assistant`. |
@@ -104,6 +104,11 @@ const supportedModels = {
     "claude-sonnet-5",
     "claude-haiku-4-5",
   ]),
+  google: new Set([
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+  ]),
 } as const
 ```
 
@@ -121,9 +126,11 @@ produced it. The client must begin a new conversation when the selected
 provider or model changes.
 
 For OpenAI, the backend maps `continuation_id` to OpenAI's
-`previous_response_id`. When no continuation is available, it sends the full
-transcript. Anthropic always receives the full transcript because its Messages
-API is stateless; Anthropic responses omit `continuation_id`.
+`previous_response_id`. For Google Gemini, it maps the identifier to the
+Interactions API's `previous_interaction_id`. When no continuation is available,
+either provider receives the full transcript. Anthropic always receives the full
+transcript because its Messages API is stateless; Anthropic responses omit
+`continuation_id`.
 
 If a continuation is expired, malformed, unknown, or incompatible with the
 requested provider or model, the backend returns `invalid_continuation`.
