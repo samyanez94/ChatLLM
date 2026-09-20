@@ -19,8 +19,11 @@ enum OpenAIModelCatalog {
 	/// The stable OpenAI API identifier for GPT-5.6 Sol.
 	nonisolated static let solId = "gpt-5.6-sol"
 
+	/// The stable OpenAI API identifier for GPT-6 Astra.
+	nonisolated static let astraId = "gpt-6-astra"
+
 	/// Model identifiers accepted by the app and ChatLLM backend.
-	nonisolated static let modelIds = [lunaId, terraId, solId]
+	nonisolated static let modelIds = [lunaId, terraId, solId, astraId]
 
 	/// Creates metadata for every supported OpenAI model.
 	static func models(
@@ -42,7 +45,13 @@ enum OpenAIModelCatalog {
 			model(
 				id: solId,
 				displayName: "GPT-5.6 Sol",
-				summary: "The most capable option. Best for complex problems and coding.",
+				summary: "Highly capable. Best for complex problems and coding.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: astraId,
+				displayName: "GPT-6 Astra",
+				summary: "The most capable option. Best for the hardest reasoning and coding tasks.",
 				isConfigured: isConfigured
 			)
 		]

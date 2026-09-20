@@ -2,6 +2,7 @@ const openAIModels: ReadonlySet<string> = new Set([
   "gpt-5.6-luna",
   "gpt-5.6-terra",
   "gpt-5.6-sol",
+  "gpt-6-astra",
 ]);
 
 const anthropicModels: ReadonlySet<string> = new Set([

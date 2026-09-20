@@ -11,7 +11,7 @@ import Testing
 
 @MainActor
 struct ChatProviderFactoryTests {
-	@Test("The model catalog includes the GPT-5.6 family")
+	@Test("The model catalog includes the GPT-5.6 family and GPT-6 Astra")
 	func includesOpenAIModels() throws {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
@@ -25,7 +25,7 @@ struct ChatProviderFactoryTests {
 		#expect(openAIModels.allSatisfy { $0.providerName == "OpenAI" })
 		#expect(
 			openAIModels.map(\.displayName)
-				== ["GPT-5.6 Luna", "GPT-5.6 Terra", "GPT-5.6 Sol"]
+				== ["GPT-5.6 Luna", "GPT-5.6 Terra", "GPT-5.6 Sol", "GPT-6 Astra"]
 		)
 		#expect(openAIModels.allSatisfy { $0.availability.isAvailable })
 	}

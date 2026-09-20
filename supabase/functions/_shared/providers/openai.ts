@@ -49,6 +49,9 @@ export async function createOpenAIResponse(
       },
       body: JSON.stringify({
         model: request.model,
+        ...(request.model === "gpt-6-astra"
+          ? { reasoning: { effort: "low" } }
+          : {}),
         input: request.continuationId === undefined
           ? request.messages.map(({ role, content }) => ({ role, content }))
           : request.messages.at(-1)?.content,

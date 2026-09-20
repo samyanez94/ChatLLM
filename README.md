@@ -65,7 +65,8 @@ The current lineup includes:
   Foundation Models framework.
 - GPT-5.6 Luna — the fast and economical OpenAI option.
 - GPT-5.6 Terra — the balanced OpenAI option.
-- GPT-5.6 Sol — the most capable OpenAI option in the current catalog.
+- GPT-5.6 Sol — a highly capable OpenAI option for complex problems and coding.
+- GPT-6 Astra — the most capable OpenAI option, using low reasoning by default.
 - Claude Opus 5 — Anthropic's powerful option for complex coding and knowledge work.
 - Claude Sonnet 5 — Anthropic's balanced option for everyday conversations.
 - Claude Haiku 4.5 — Anthropic's fastest option for simple and frequent tasks.

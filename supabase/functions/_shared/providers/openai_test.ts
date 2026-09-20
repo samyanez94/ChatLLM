@@ -64,6 +64,30 @@ Deno.test("sends the complete transcript without a continuation", async () => {
   });
 });
 
+for (const continuationId of [undefined, "resp_previous"]) {
+  Deno.test(`Astra uses low reasoning ${continuationId ? "with" : "without"} a continuation`, async () => {
+    let capturedBody: unknown;
+    const response = await createOpenAIResponse(
+      { ...request, model: "gpt-6-astra", continuationId },
+      "request-123",
+      dependencies((_input, init) => {
+        capturedBody = JSON.parse(String(init?.body));
+        return Promise.resolve(openAISuccessResponse());
+      }),
+    );
+
+    assertEquals(capturedBody, {
+      model: "gpt-6-astra",
+      reasoning: { effort: "low" },
+      input: continuationId === undefined ? request.messages : "Hello",
+      ...(continuationId === undefined ? {} : {
+        previous_response_id: continuationId,
+      }),
+    });
+    assertEquals(response, { id: "resp_123", outputText: "Hello world" });
+  });
+}
+
 Deno.test("combines output text content", async () => {
   const response = await createOpenAIResponse(
     request,

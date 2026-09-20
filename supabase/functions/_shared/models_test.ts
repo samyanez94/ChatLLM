@@ -4,7 +4,12 @@ import { assert, assertEquals } from "./test_helpers.ts";
 Deno.test("recognizes OpenAI models", () => {
   assert(isSupportedProvider("openai"));
   for (
-    const model of ["gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"]
+    const model of [
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+      "gpt-6-astra",
+    ]
   ) {
     assert(isSupportedModel("openai", model));
   }

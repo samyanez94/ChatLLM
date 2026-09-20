@@ -98,6 +98,7 @@ const supportedModels = {
     "gpt-5.6-luna",
     "gpt-5.6-terra",
     "gpt-5.6-sol",
+    "gpt-6-astra",
   ]),
   anthropic: new Set([
     "claude-opus-5",
@@ -115,6 +116,11 @@ const supportedModels = {
 An unknown provider produces `unsupported_provider`. A known provider paired
 with an unsupported model produces `unsupported_model`. Unsupported requests
 must be rejected before calling the upstream provider.
+
+GPT-6 Astra requests use `reasoning: { effort: "low" }`, including requests
+with a continuation. This default is set by the backend; the public request
+does not expose a reasoning option. Other OpenAI models retain their provider
+defaults.
 
 ## Continuations
 
