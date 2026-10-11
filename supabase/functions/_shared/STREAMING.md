@@ -78,7 +78,8 @@ deno check --no-lock --config supabase/functions/chat/deno.json supabase/functio
 
 The streaming tests use controlled upstream streams to verify incremental
 delivery, fragmentation, compatibility, terminal events, error sanitization, and
-cancellation. A deployed smoke test is still needed to verify buffering and
-client-disconnect propagation through the Supabase gateway. The iOS client must
-opt in separately; this backend change does not change its current non-streaming
-behavior.
+cancellation. Deployed smoke tests verified incremental delivery for OpenAI,
+Anthropic, and Google through the Supabase gateway, plus the default JSON
+response. Client-disconnect propagation through the deployed gateway still needs
+separate verification. The iOS client must opt in separately; this backend
+change does not change its current non-streaming behavior.
