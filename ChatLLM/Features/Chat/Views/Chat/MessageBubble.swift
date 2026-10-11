@@ -12,10 +12,25 @@ struct MessageBubble: View {
 		BackgroundColor(.clear)
 	}
 
-	let message: ChatMessage
+	let text: String
+
+	let role: ChatMessageRole
+
+	var status: ChatMessageStatus = .completed
+
+	init(message: ChatMessage) {
+		text = message.text
+		role = message.role
+		status = message.status
+	}
+
+	init(text: String, role: ChatMessageRole) {
+		self.text = text
+		self.role = role
+	}
 
 	private var isUser: Bool {
-		message.role == .user
+		role == .user
 	}
 
 	var body: some View {
@@ -23,11 +38,18 @@ struct MessageBubble: View {
 			if isUser {
 				Spacer(minLength: 48)
 			}
-			messageText
-				.padding(.horizontal, 14)
-				.padding(.vertical, 10)
-				.background(isUser ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.fill.tertiary), in: .rect(cornerRadius: 18))
-				.foregroundStyle(isUser ? Color.white : .primary)
+			VStack(alignment: .leading, spacing: 6) {
+				messageText
+				if status != .completed {
+					Text(status == .stopped ? "Stopped" : "Interrupted")
+						.font(.caption)
+						.foregroundStyle(.secondary)
+				}
+			}
+			.padding(.horizontal, 14)
+			.padding(.vertical, 10)
+			.background(isUser ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.fill.tertiary), in: .rect(cornerRadius: 18))
+			.foregroundStyle(isUser ? Color.white : .primary)
 			if !isUser {
 				Spacer(minLength: 48)
 			}
@@ -37,10 +59,10 @@ struct MessageBubble: View {
 	@ViewBuilder
 	private var messageText: some View {
 		if isUser {
-			Text(message.text)
+			Text(text)
 				.font(.body)
 		} else {
-			Markdown(message.text)
+			Markdown(text)
 				.markdownTheme(Self.assistantTheme)
 		}
 	}

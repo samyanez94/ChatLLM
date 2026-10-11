@@ -14,6 +14,8 @@ struct MessageList: View {
 
 	let isResponding: Bool
 
+	var streamingText = ""
+
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
 	@State private var scrollPosition = ScrollPosition(edge: .bottom)
@@ -27,6 +29,9 @@ struct MessageList: View {
 			LazyVStack(spacing: 12) {
 				ForEach(messages) { message in
 					MessageBubble(message: message)
+				}
+				if !streamingText.isEmpty {
+					MessageBubble(text: streamingText, role: .assistant)
 				}
 				if isResponding {
 					ProgressView()
@@ -44,19 +49,16 @@ struct MessageList: View {
 		.onScrollGeometryChange(for: ScrollMetrics.self) { geometry in
 			ScrollMetrics(geometry: geometry)
 		} action: { previous, current in
-			if current.hasSameLayout(as: previous) {
-				// Nothing resized, so only a gesture can change whether the transcript follows new content.
-				if isUserScrolling {
-					isPinnedToBottom = current.distanceFromBottom <= Self.pinThreshold
-				}
-			} else if isPinnedToBottom {
-				// The transcript or the visible area grew, so catch up with the new bottom.
+			if isUserScrolling {
+				// Gestures take priority even while new text changes the content height.
+				isPinnedToBottom = current.distanceFromBottom <= Self.pinThreshold
+			} else if !current.hasSameLayout(as: previous) && isPinnedToBottom {
 				scrollToBottom()
 			}
 		}
 		.onChange(of: messages.count) {
-			isPinnedToBottom = true
-			scrollToBottom()
+			if messages.last?.role == .user { isPinnedToBottom = true }
+			if isPinnedToBottom { scrollToBottom() }
 		}
 	}
 
@@ -72,7 +74,7 @@ struct MessageList: View {
 	}
 
 	private func scrollToBottom() {
-		withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) {
+		withAnimation(reduceMotion || isResponding ? nil : .smooth(duration: 0.25)) {
 			scrollPosition.scrollTo(edge: .bottom)
 		}
 	}

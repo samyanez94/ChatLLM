@@ -23,6 +23,14 @@ final class ChatViewModel: Identifiable {
 	/// The latest user-facing error, or `nil` when no error is presented.
 	private(set) var errorMessage: String?
 
+	private(set) var streamingText = ""
+
+	@ObservationIgnored private var responseTask: Task<Void, Never>?
+
+	@ObservationIgnored private var interruptionStatus = ChatMessageStatus.interrupted
+
+	@ObservationIgnored private var isDeleted = false
+
 	private let provider: any ChatProviding
 
 	private let modelContext: ModelContext
@@ -120,6 +128,8 @@ final class ChatViewModel: Identifiable {
 			return
 		}
 
+		errorMessage = nil
+		provider.synchronizeTranscript(messages)
 		let message = trimmedDraft
 
 		let previousUpdatedAt = chat.updatedAt
@@ -127,7 +137,9 @@ final class ChatViewModel: Identifiable {
 		do {
 			try modelContext.save()
 		} catch {
-			chat.messages.removeAll { $0.id == userMessage.id }
+			chat.messages.removeAll {
+				$0.id == userMessage.id
+			}
 			modelContext.delete(userMessage)
 			chat.updatedAt = previousUpdatedAt
 			errorMessage = Self.userMessageSaveError
@@ -136,24 +148,74 @@ final class ChatViewModel: Identifiable {
 
 		draft = ""
 		isResponding = true
+		streamingText = ""
+		interruptionStatus = .interrupted
+		let task = Task {
+			await generateResponse(to: message)
+		}
+		responseTask = task
+		await withTaskCancellationHandler {
+			await task.value
+		} onCancel: {
+			task.cancel()
+		}
+	}
+
+	/// Stops generation while keeping any text already received.
+	func stopResponse() {
+		interruptionStatus = .stopped
+		responseTask?.cancel()
+	}
+
+	/// Leaving the conversation stops its request instead of generating offscreen.
+	func interruptResponse() {
+		responseTask?.cancel()
+	}
+
+	func cancelForDeletion() {
+		isDeleted = true
+		responseTask?.cancel()
+	}
+
+	private func generateResponse(to message: String) async {
 		defer {
 			isResponding = false
+			responseTask = nil
+			streamingText = ""
 		}
-
+		var status = ChatMessageStatus.completed
 		do {
-			let reply = try await provider.generateReply(to: message)
-			chat.appendMessage(text: reply, role: .assistant)
-			chat.continuationId = provider.continuationId
-			do {
-				try modelContext.save()
-			} catch {
-				modelContext.rollback()
-				errorMessage = Self.assistantMessageSaveError
+			try Task.checkCancellation()
+			let reply = try await provider.streamReply(to: message) { text in
+				guard !Task.isCancelled else {
+					return
+				}
+				self.streamingText = text
 			}
-		} catch is CancellationError {
-			return
+
+			try Task.checkCancellation()
+			streamingText = reply
 		} catch {
-			errorMessage = userFacingMessage(for: error)
+			if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
+				status = interruptionStatus
+			} else {
+				status = .interrupted
+				errorMessage = userFacingMessage(for: error)
+			}
+		}
+		guard !isDeleted else {
+			return
+		}
+		if !streamingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+			let reply = chat.appendMessage(text: streamingText, role: .assistant)
+			reply.status = status
+		}
+		chat.continuationId = status == .completed ? provider.continuationId : nil
+		do {
+			try modelContext.save()
+		} catch {
+			modelContext.rollback()
+			errorMessage = Self.assistantMessageSaveError
 		}
 	}
 
@@ -168,8 +230,10 @@ final class ChatViewModel: Identifiable {
 		switch clientError {
 		case .invalidAPIKey:
 			return "ChatLLM couldn’t authenticate with the backend. Check the app configuration."
-		case .requestFailed(_, let apiError?):
+		case .requestFailed(_, let apiError?), .streamFailed(let apiError):
 			return "\(apiError.message)\n\nRequest ID: \(apiError.requestId)"
+		case .incompleteStream:
+			return "The connection ended before the response finished. Any partial response has been kept."
 		case .invalidHTTPResponse, .requestFailed, .invalidResponsePayload:
 			return Self.genericErrorMessage
 		}
@@ -182,5 +246,5 @@ final class ChatViewModel: Identifiable {
 		"Your message couldn’t be saved on this device. Please try again."
 
 	private static let assistantMessageSaveError =
-		"The response couldn’t be saved on this device and may be lost when you close the app."
+		"The response couldn’t be saved on this device. Please try again."
 }

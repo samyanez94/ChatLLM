@@ -5,9 +5,8 @@
 //  Created by Samuel Yanez on 8/16/26.
 //
 
-import Testing
-
 @testable import ChatLLM
+import Testing
 
 @MainActor
 struct ChatLLMChatServiceTests {
@@ -197,6 +196,29 @@ struct ChatLLMChatServiceTests {
 				.init(role: .user, content: "Continue"),
 				.init(role: .assistant, content: "Restored reply"),
 				.init(role: .user, content: "Next")
+			]
+		)
+	}
+
+	@Test("Streaming uses reconciled partial history and returns snapshots")
+	func streamsAfterInterruptedResponse() async throws {
+		let client = StubChatLLMClient(responses: [makeResponse(id: nil, text: "Continued")])
+		let service = ChatLLMChatService(client: client, model: try makeModel(), continuationId: "legacy")
+		service.synchronizeTranscript([
+			ChatMessage(sequence: 1, text: "Partial answer", role: .assistant, status: .stopped),
+			ChatMessage(sequence: 0, text: "Original question", role: .user)
+		])
+		var snapshots = [String]()
+		let result = try await service.streamReply(to: "Continue") { snapshots.append($0) }
+		#expect(result == "Continued")
+		#expect(snapshots == ["Continued"])
+		let request = try #require(await client.recordedRequests.first)
+		#expect(request.continuationId == nil)
+		#expect(
+			request.messages == [
+				.init(role: .user, content: "Original question"),
+				.init(role: .assistant, content: "Partial answer"),
+				.init(role: .user, content: "Continue")
 			]
 		)
 	}

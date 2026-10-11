@@ -8,14 +8,19 @@ import SwiftData
 import SwiftUI
 
 struct ChatView: View {
+
+	@Environment(\.scenePhase) private var scenePhase
+
 	@Bindable var viewModel: ChatViewModel
+
 	@FocusState private var isComposerFocused: Bool
 
 	var body: some View {
 		VStack(spacing: 0) {
 			MessageList(
 				messages: viewModel.messages,
-				isResponding: viewModel.isResponding
+				isResponding: viewModel.isResponding,
+				streamingText: viewModel.streamingText
 			)
 			.simultaneousGesture(
 				TapGesture()
@@ -27,6 +32,8 @@ struct ChatView: View {
 			MessageComposer(
 				draft: $viewModel.draft,
 				canSend: viewModel.canSend,
+				isResponding: viewModel.isResponding,
+				stop: viewModel.stopResponse,
 				isFocused: $isComposerFocused,
 				send: { Task { await viewModel.sendMessage() } }
 			)
@@ -37,6 +44,14 @@ struct ChatView: View {
 		.onAppear {
 			if viewModel.messages.isEmpty {
 				isComposerFocused = true
+			}
+		}
+		.onDisappear {
+			viewModel.interruptResponse()
+		}
+		.onChange(of: scenePhase) { _, phase in
+			if phase == .background {
+				viewModel.interruptResponse()
 			}
 		}
 		.alert("Something went wrong", isPresented: $viewModel.isShowingError) {

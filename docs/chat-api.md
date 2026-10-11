@@ -43,6 +43,7 @@ included in the client or accepted as client credentials by this endpoint.
 | `messages` | array | Yes | Non-empty transcript of `user` and `assistant` messages ending with a user message. |
 | `messages[].role` | string | Yes | Either `user` or `assistant`. |
 | `messages[].content` | string | Yes | Non-empty text content for the message. |
+| `stream` | boolean | No | Set to `true` for SSE. Omitted or `false` keeps the JSON response. |
 | `continuation_id` | string | No | Legacy opaque identifier. Accepted for compatibility and ignored; the full transcript is always used. |
 
 Unknown fields may be ignored for forward compatibility. Missing fields,
@@ -71,6 +72,7 @@ Content-Type: application/json
 | --- | --- | --- |
 | `provider` | string | Provider that generated the response. |
 | `model` | string | Model that generated the response. |
+| `stream` | boolean | No | Set to `true` for SSE. Omitted or `false` keeps the JSON response. |
 | `continuation_id` | string | Legacy optional field; omitted by the OpenRouter backend. |
 | `output_text` | string | Generated assistant response. |
 
@@ -156,7 +158,7 @@ catalog when creating them. No saved model ID is rewritten during this update.
 Deploy this expanded allowlist before releasing the updated iOS picker.
 
 The adapter calls `POST https://openrouter.ai/api/v1/chat/completions` with
-`stream: false` and a server-side `OPENROUTER_API_KEY`. It uses OpenRouter's
+`stream` matching the requested response mode and a server-side `OPENROUTER_API_KEY`. It uses OpenRouter's
 automatic hosting-endpoint selection and default endpoint fallback behavior for
 the selected model. It does not request fallback to a different model or override
 the account's privacy settings. The public response echoes the original ChatLLM
@@ -176,8 +178,41 @@ ID is not a conversation continuation and is never returned in this field.
 
 Existing clients already handle an absent continuation: the next successful
 reply clears the saved ID, and later turns continue using the full transcript.
-No SwiftData schema change or chat-ID migration is required. The existing 32 KiB
-transcript limit still applies.
+Legacy continuation compatibility does not require rewriting chat IDs. The existing
+32 KiB transcript limit still applies.
+
+## Streaming and iOS Behavior
+
+The iOS client opts into `stream: true` and consumes the response using
+`URLSession.bytes(for:)`. The [SSE contract](../supabase/functions/_shared/STREAMING.md)
+defines `delta`, `completed`, and `error` events. The client validates the selected
+model on completion and treats EOF without a completion event as an interruption.
+Errors before streaming begins remain ordinary HTTP/JSON errors.
+
+Both remote providers and Apple's `LanguageModelSession.streamResponse` report
+cumulative text snapshots through `ChatProviding.streamReply`. Updates are consumed
+in the generation task; no independent token producer or unbounded queue is used.
+The view model displays each snapshot directly; SwiftUI updates the message bubble.
+
+The Stop button cancels the generation task and its URLSession request. Leaving a
+conversation or backgrounding the app also cancels generation. Partial text is
+saved with `stopped` or `interrupted` status; complete replies use `completed`.
+Generation with no visible text does not insert an empty assistant message. Active
+text stays in memory until generation ends, so a forced process termination can
+lose the active partial reply. Completed and interrupted replies survive reopening.
+
+Before each generation, providers synchronize with the saved transcript. The next request therefore includes the same partial answer that
+the user sees. Apple's session is rebuilt from that transcript as well. Status
+labels are display metadata, not text inserted into model prompts.
+
+This development update adds `ChatMessage.status` directly to the initial SwiftData
+schema. No production migration is provided; an incompatible existing development
+store may require reinstalling the app after preserving any wanted test chats.
+
+Live checks confirmed completion and client cancellation against deployed Supabase.
+The client closes its connection; provider-side generation/billing cancellation
+and gateway-to-worker disconnect propagation are not directly observable in these
+checks. Actual Apple Intelligence generation requires supported hardware.
 
 ## Error Response
 

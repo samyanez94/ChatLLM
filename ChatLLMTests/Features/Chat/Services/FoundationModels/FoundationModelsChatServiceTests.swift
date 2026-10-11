@@ -3,10 +3,9 @@
 //  ChatLLMTests
 //
 
+@testable import ChatLLM
 import FoundationModels
 import Testing
-
-@testable import ChatLLM
 
 @MainActor
 struct FoundationModelsChatServiceTests {
@@ -14,7 +13,7 @@ struct FoundationModelsChatServiceTests {
 	func restoresTranscript() throws {
 		let transcript = FoundationModelsChatService.makeTranscript(
 			from: [
-				ChatMessage(sequence: 1, text: "Hello back", role: .assistant),
+				ChatMessage(sequence: 1, text: "Hello back", role: .assistant, status: .stopped),
 				ChatMessage(sequence: 0, text: "Hello", role: .user)
 			]
 		)

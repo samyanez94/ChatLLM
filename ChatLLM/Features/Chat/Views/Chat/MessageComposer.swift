@@ -9,6 +9,8 @@ import SwiftUI
 struct MessageComposer: View {
 	@Binding var draft: String
 	let canSend: Bool
+	let isResponding: Bool
+	let stop: () -> Void
 	let isFocused: FocusState<Bool>.Binding
 	let send: () -> Void
 
@@ -22,14 +24,15 @@ struct MessageComposer: View {
 				.background(.fill.tertiary, in: .rect(cornerRadius: 18))
 				.submitLabel(.send)
 				.onSubmit(send)
-			Button(action: send) {
-				Image(systemName: "arrow.up")
+			Button(action: isResponding ? stop : send) {
+				Image(systemName: isResponding ? "stop.fill" : "arrow.up")
 					.bold()
 					.padding(5)
 			}
 			.buttonStyle(.borderedProminent)
 			.buttonBorderShape(.circle)
-			.disabled(!canSend)
+			.disabled(!isResponding && !canSend)
+			.accessibilityLabel(isResponding ? "Stop response" : "Send message")
 		}
 		.padding()
 	}

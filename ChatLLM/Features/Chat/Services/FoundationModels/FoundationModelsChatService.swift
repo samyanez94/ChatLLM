@@ -4,6 +4,7 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
+import Foundation
 import FoundationModels
 
 /// Generates chat responses using Apple's on-device Foundation Models framework.
@@ -15,7 +16,7 @@ final class FoundationModelsChatService: ChatProviding {
 
 	private let foundationModel: SystemLanguageModel
 
-	private let session: LanguageModelSession
+	private var session: LanguageModelSession
 
 	init(
 		model: SystemLanguageModel = .default,
@@ -46,7 +47,25 @@ final class FoundationModelsChatService: ChatProviding {
 
 	/// Generates a reply using the current language-model session.
 	func generateReply(to message: String) async throws -> String {
-		try await session.respond(to: message).content
+		try await streamReply(to: message) { _ in }
+	}
+
+	func streamReply(to message: String, onUpdate: @MainActor (String) -> Void) async throws -> String {
+		var text = ""
+		for try await snapshot in session.streamResponse(to: message) {
+			try Task.checkCancellation()
+			text = snapshot.content
+			onUpdate(text)
+		}
+		try Task.checkCancellation()
+		guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+			throw ChatLLMClientError.invalidResponsePayload
+		}
+		return text
+	}
+
+	func synchronizeTranscript(_ messages: [ChatMessage]) {
+		session = LanguageModelSession(model: foundationModel, transcript: Self.makeTranscript(from: messages))
 	}
 
 	static func makeTranscript(from messages: [ChatMessage]) -> Transcript {

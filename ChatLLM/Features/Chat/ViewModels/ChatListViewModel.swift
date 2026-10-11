@@ -141,8 +141,13 @@ final class ChatListViewModel {
 		}
 		do {
 			try modelContext.save()
+			for chat in chatsToRemove {
+				chat.cancelForDeletion()
+			}
 			let chatIds = Set(chatsToRemove.map(\.id))
-			chats.removeAll { chatIds.contains($0.id) }
+			chats.removeAll {
+				chatIds.contains($0.id)
+			}
 		} catch {
 			modelContext.rollback()
 			self.errorMessage = errorMessage

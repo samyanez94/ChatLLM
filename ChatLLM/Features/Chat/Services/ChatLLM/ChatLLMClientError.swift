@@ -10,5 +10,7 @@ nonisolated enum ChatLLMClientError: Error, Equatable, Sendable {
 	case invalidHTTPResponse
 	case invalidAPIKey
 	case requestFailed(statusCode: Int, apiError: ChatLLMAPIError?)
+	case incompleteStream
+	case streamFailed(ChatLLMAPIError)
 	case invalidResponsePayload
 }

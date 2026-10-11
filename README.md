@@ -15,7 +15,8 @@ local persistence, concurrency, and LLM integrations.
 - Chat with Apple's on-device model on supported devices
 - Choose from eight hosted models, grouped by provider
 - Read model descriptions and availability information before starting a chat
-- View assistant replies with Markdown formatting
+- Watch replies arrive progressively with Markdown formatting
+- Stop generation and retain partial replies marked as stopped or interrupted
 - Save conversations locally and reopen them across app launches
 - Continue older conversations with their original model
 - Delete conversations from the chat list

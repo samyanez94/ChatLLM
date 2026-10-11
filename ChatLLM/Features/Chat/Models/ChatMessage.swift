@@ -19,6 +19,9 @@ final class ChatMessage {
 	/// The message content displayed to the user.
 	var text: String
 
+	/// Whether generation completed, was stopped, or was interrupted.
+	var status: ChatMessageStatus
+
 	/// The participant that authored the message.
 	var role: ChatMessageRole
 
@@ -34,11 +37,13 @@ final class ChatMessage {
 		text: String,
 		role: ChatMessageRole,
 		createdAt: Date = .now,
+		status: ChatMessageStatus = .completed,
 		chat: Chat? = nil
 	) {
 		self.id = id
 		self.sequence = sequence
 		self.text = text
+		self.status = status
 		self.role = role
 		self.createdAt = createdAt
 		self.chat = chat

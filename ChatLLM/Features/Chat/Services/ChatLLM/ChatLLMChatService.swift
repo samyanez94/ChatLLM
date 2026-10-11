@@ -63,26 +63,35 @@ final class ChatLLMChatService: ChatProviding {
 
 	/// Generates a reply and continues from the last successful backend response.
 	func generateReply(to message: String) async throws -> String {
-		guard isGenerating == false else {
+		try await streamReply(to: message) { _ in }
+	}
+
+	func streamReply(to message: String, onUpdate: @MainActor (String) -> Void) async throws -> String {
+		guard !isGenerating else {
 			throw ChatLLMChatServiceError.responseInProgress
 		}
 		isGenerating = true
 		defer {
 			isGenerating = false
 		}
-		let userMessage = ChatLLMRequestMessage(role: .user, content: message)
-		let requestMessages = messages + [userMessage]
-		let response = try await client.createResponse(
+		let requestMessages = messages + [.init(role: .user, content: message)]
+		let response = try await client.streamResponse(
 			provider: model.providerId,
 			model: model.id,
 			messages: requestMessages,
-			continuationId: continuationId
+			continuationId: continuationId,
+			onUpdate: { text in await onUpdate(text)
+			}
 		)
-		messages =
-			requestMessages + [
-				ChatLLMRequestMessage(role: .assistant, content: response.outputText)
-			]
+		try Task.checkCancellation()
+		messages = requestMessages + [.init(role: .assistant, content: response.outputText)]
 		continuationId = response.continuationId
 		return response.outputText
 	}
+
+	func synchronizeTranscript(_ messages: [ChatMessage]) {
+		self.messages = messages.sorted { $0.sequence < $1.sequence }.map(ChatLLMRequestMessage.init)
+		continuationId = nil
+	}
+
 }
