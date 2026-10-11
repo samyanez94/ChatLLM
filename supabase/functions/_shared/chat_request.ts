@@ -14,12 +14,17 @@ export interface ChatRequest {
   model: string;
   messages: ChatMessage[];
   continuationId?: string;
+  stream?: boolean;
 }
 
 /** Decodes and validates the provider-neutral Chat API request body. */
 export function parseChatRequest(value: unknown): ChatRequest {
   if (!isRecord(value)) {
     throw invalidRequest("The request body must be a JSON object.");
+  }
+
+  if (value.stream !== undefined && typeof value.stream !== "boolean") {
+    throw invalidRequest("Field 'stream' must be a boolean.");
   }
 
   const provider = requiredNonEmptyString(value, "provider");
@@ -43,6 +48,7 @@ export function parseChatRequest(value: unknown): ChatRequest {
     provider,
     model,
     messages,
+    ...(value.stream === undefined ? {} : { stream: value.stream }),
     ...(continuationId === undefined ? {} : { continuationId }),
   };
 }

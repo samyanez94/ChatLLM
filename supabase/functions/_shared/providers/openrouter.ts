@@ -94,7 +94,7 @@ export async function createOpenRouterResponse(
   }
 }
 
-function errorForStatus(status: number): ChatAPIError {
+export function errorForStatus(status: number): ChatAPIError {
   switch (status) {
     case 401:
       return new ChatAPIError(
