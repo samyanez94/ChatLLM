@@ -166,6 +166,31 @@ struct ChatViewModelTests {
 		#expect(chat.continuationId == "response-1")
 	}
 
+	@Test("A transcript-only reply removes the persisted legacy continuation")
+	func clearsLegacyContinuationIdentifier() async throws {
+		let container = try makeModelContainer()
+		let modelContext = container.mainContext
+		let viewModel = ChatViewModel(
+			provider: StubChatProvider(result: .success("Restored reply")),
+			messages: [
+				ChatMessage(sequence: 0, text: "Original", role: .user),
+				ChatMessage(sequence: 1, text: "Original reply", role: .assistant)
+			],
+			modelContext: modelContext
+		)
+		viewModel.chat.continuationId = "resp_legacy"
+		try modelContext.save()
+		viewModel.draft = "Continue"
+
+		await viewModel.sendMessage()
+		modelContext.rollback()
+
+		let chat = try #require(modelContext.fetch(FetchDescriptor<Chat>()).first)
+		#expect(chat.continuationId == nil)
+		#expect(chat.messages.count == 4)
+		#expect(viewModel.errorMessage == nil)
+	}
+
 	@Test("A backend error preserves its message and request identifier")
 	func preservesBackendError() async throws {
 		let apiError = ChatLLMAPIError(

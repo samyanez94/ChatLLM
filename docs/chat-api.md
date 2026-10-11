@@ -3,9 +3,10 @@
 Version: v1
 
 This document defines the contract between the ChatLLM iOS client and the
-ChatLLM backend. The backend owns provider credentials, validates supported
-provider and model combinations, and translates provider-specific responses
-and errors into this stable API.
+ChatLLM backend. The backend owns the OpenRouter credential, validates supported
+model-author and model combinations, and translates OpenRouter responses and
+errors into this stable API. The iOS app continues to use Supabase credentials;
+OpenRouter is a backend implementation detail.
 
 ## Endpoint
 
@@ -20,7 +21,7 @@ the calling Supabase project but does not authenticate or identify an end user.
 Requests using any HTTP method other than `POST` are rejected.
 
 The publishable key is safe to include in the iOS application and must not be
-treated as a secret. Supabase secret keys and provider API keys must never be
+treated as a secret. Supabase secret keys and the OpenRouter API key must never be
 included in the client or accepted as client credentials by this endpoint.
 
 ## Request
@@ -31,19 +32,18 @@ included in the client or accepted as client credentials by this endpoint.
   "model": "gpt-5.6-luna",
   "messages": [
     { "role": "user", "content": "Hello" }
-  ],
-  "continuation_id": "resp_123"
+  ]
 }
 ```
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `provider` | string | Yes | Stable provider identifier: `openai`, `anthropic`, or `google`. |
-| `model` | string | Yes | Provider-specific model identifier selected by the client. |
+| `provider` | string | Yes | Stable model-author identifier: `openai`, `anthropic`, or `google`. This is not an OpenRouter hosting endpoint. |
+| `model` | string | Yes | Stable ChatLLM model identifier selected by the client; mapped to an OpenRouter model ID by the backend. |
 | `messages` | array | Yes | Non-empty transcript of `user` and `assistant` messages ending with a user message. |
 | `messages[].role` | string | Yes | Either `user` or `assistant`. |
 | `messages[].content` | string | Yes | Non-empty text content for the message. |
-| `continuation_id` | string | No | Opaque identifier returned by the previous successful response. |
+| `continuation_id` | string | No | Legacy opaque identifier. Accepted for compatibility and ignored; the full transcript is always used. |
 
 Unknown fields may be ignored for forward compatibility. Missing fields,
 incorrect field types, empty identifiers, invalid roles, and empty content
@@ -63,7 +63,6 @@ Content-Type: application/json
 {
   "provider": "openai",
   "model": "gpt-5.6-luna",
-  "continuation_id": "resp_456",
   "output_text": "Hi! How can I help?"
 }
 ```
@@ -72,7 +71,7 @@ Content-Type: application/json
 | --- | --- | --- |
 | `provider` | string | Provider that generated the response. |
 | `model` | string | Model that generated the response. |
-| `continuation_id` | string | Optional opaque identifier to include in the next request when the provider supports continuations. |
+| `continuation_id` | string | Legacy optional field; omitted by the OpenRouter backend. |
 | `output_text` | string | Generated assistant response. |
 
 The returned `provider` and `model` must match the accepted request.
@@ -87,8 +86,8 @@ The backend validates requests in this order:
 1. Validate the request shape and transcript constraints.
 2. Confirm that the provider is supported.
 3. Confirm that the model is supported by that provider.
-4. Validate the continuation, when one is supplied.
-5. Invoke the selected provider adapter.
+4. Map the model to its allowlisted OpenRouter ID.
+5. Invoke the OpenRouter adapter with the full transcript.
 
 In v1, the supported catalog is equivalent to:
 
@@ -115,31 +114,49 @@ const supportedModels = {
 
 An unknown provider produces `unsupported_provider`. A known provider paired
 with an unsupported model produces `unsupported_model`. Unsupported requests
-must be rejected before calling the upstream provider.
+must be rejected before calling OpenRouter.
 
-GPT-6 Astra requests use `reasoning: { effort: "low" }`, including requests
-with a continuation. This default is set by the backend; the public request
-does not expose a reasoning option. Other OpenAI models retain their provider
-defaults.
+### OpenRouter Mapping and Routing
 
-## Continuations
+The app and saved conversations retain the existing IDs. The backend uses this
+explicit mapping (verified against OpenRouter's catalog on October 11, 2026):
 
-`continuation_id` is opaque to the client. The client must not parse, modify,
-or manufacture it.
+| Provider | ChatLLM model ID | OpenRouter model ID |
+| --- | --- | --- |
+| `openai` | `gpt-5.6-luna` | `openai/gpt-5.6-luna` |
+| `openai` | `gpt-5.6-terra` | `openai/gpt-5.6-terra` |
+| `openai` | `gpt-5.6-sol` | `openai/gpt-5.6-sol` |
+| `openai` | `gpt-6-astra` | `openai/gpt-6-astra` |
+| `anthropic` | `claude-opus-5` | `anthropic/claude-opus-5` |
+| `anthropic` | `claude-sonnet-5` | `anthropic/claude-sonnet-5` |
+| `anthropic` | `claude-haiku-4-5` | `anthropic/claude-haiku-4.5` |
+| `google` | `gemini-3.6-flash` | `google/gemini-3.6-flash` |
+| `google` | `gemini-3.5-flash` | `google/gemini-3.5-flash` |
+| `google` | `gemini-3.5-flash-lite` | `google/gemini-3.5-flash-lite` |
 
-A continuation is valid only for the conversation, provider, and model that
-produced it. The client must begin a new conversation when the selected
-provider or model changes.
+The adapter calls `POST https://openrouter.ai/api/v1/chat/completions` with
+`stream: false` and a server-side `OPENROUTER_API_KEY`. It uses OpenRouter's
+automatic hosting-endpoint selection and default endpoint fallback behavior for
+the selected model. It does not request fallback to a different model or override
+the account's privacy settings. The public response echoes the original ChatLLM
+provider/model IDs, not OpenRouter's response model slug.
 
-For OpenAI, the backend maps `continuation_id` to OpenAI's
-`previous_response_id`. For Google Gemini, it maps the identifier to the
-Interactions API's `previous_interaction_id`. When no continuation is available,
-either provider receives the full transcript. Anthropic always receives the full
-transcript because its Messages API is stateless; Anthropic responses omit
-`continuation_id`.
+GPT-6 Astra requests use `reasoning: { effort: "low" }`. This default is set by
+the backend; the public request does not expose a reasoning option. Other models
+use OpenRouter's model/provider defaults. Only assistant text is returned to the
+app; reasoning and upstream metadata are not included.
 
-If a continuation is expired, malformed, unknown, or incompatible with the
-requested provider or model, the backend returns `invalid_continuation`.
+## Legacy Continuations
+
+The backend accepts a syntactically valid `continuation_id` from older clients
+but ignores it. It always sends the complete `messages` transcript to OpenRouter
+and omits `continuation_id` from successful responses. An OpenRouter generation
+ID is not a conversation continuation and is never returned in this field.
+
+Existing clients already handle an absent continuation: the next successful
+reply clears the saved ID, and later turns continue using the full transcript.
+No SwiftData schema change or chat-ID migration is required. The existing 32 KiB
+transcript limit still applies.
 
 ## Error Response
 
@@ -183,7 +200,7 @@ may be recorded in server logs but are not a replacement for the backend
 | `413` | `input_too_large` | The combined transcript content exceeds the backend's configured limit. |
 | `422` | `unsupported_provider` | The provider identifier is valid but unsupported. |
 | `422` | `unsupported_model` | The provider is supported, but the model is not supported by it. |
-| `422` | `invalid_continuation` | The continuation cannot be used with this request. |
+| `422` | `invalid_continuation` | Reserved for legacy backends; the OpenRouter adapter does not emit this code. |
 | `429` | `rate_limited` | The caller or application exceeded a configured quota. |
 | `500` | `internal_error` | The backend encountered an unexpected failure. |
 | `502` | `provider_error` | The upstream provider rejected or failed the request. |
@@ -192,6 +209,21 @@ may be recorded in server logs but are not a replacement for the backend
 
 Every error response, including unexpected server failures, must use the common
 error envelope whenever the backend is able to produce a response.
+
+### OpenRouter Error Translation
+
+OpenRouter `401` responses become `503 service_unavailable` with a safe
+configuration message, not `401 invalid_api_key` (which refers to the app's
+Supabase credential). OpenRouter `402` credit or spending-limit errors also become
+`503 service_unavailable`, with a message identifying the credit/spending limit.
+`429` maps to `rate_limited`, `408`/`504` and request timeouts map to
+`provider_timeout`, and `503` or transport failures map to `service_unavailable`.
+Other upstream failures map to `provider_error`.
+
+Malformed JSON, empty/non-text replies, and error payloads returned with HTTP 200
+are rejected as `provider_error`. Raw upstream errors are never forwarded. The
+60-second timeout covers both the upstream request and reading its response.
+The backend does not automatically retry requests.
 
 ## Security Model
 

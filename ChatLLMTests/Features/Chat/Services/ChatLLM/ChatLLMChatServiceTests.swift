@@ -166,6 +166,41 @@ struct ChatLLMChatServiceTests {
 		)
 	}
 
+	@Test("A restored chat clears its legacy continuation after an OpenRouter reply")
+	func restoredConversationSwitchesToTranscripts() async throws {
+		let client = StubChatLLMClient(
+			responses: [
+				makeResponse(id: nil, text: "Restored reply"),
+				makeResponse(id: nil, text: "Next reply")
+			]
+		)
+		let service = ChatLLMChatService(
+			client: client,
+			model: try makeModel(),
+			persistedMessages: [
+				ChatMessage(sequence: 1, text: "Original reply", role: .assistant),
+				ChatMessage(sequence: 0, text: "Original", role: .user)
+			],
+			continuationId: "resp_legacy"
+		)
+
+		_ = try await service.generateReply(to: "Continue")
+		#expect(service.continuationId == nil)
+		_ = try await service.generateReply(to: "Next")
+		let requests = await client.recordedRequests
+
+		#expect(requests.map(\.continuationId) == ["resp_legacy", nil])
+		#expect(
+			requests.last?.messages == [
+				.init(role: .user, content: "Original"),
+				.init(role: .assistant, content: "Original reply"),
+				.init(role: .user, content: "Continue"),
+				.init(role: .assistant, content: "Restored reply"),
+				.init(role: .user, content: "Next")
+			]
+		)
+	}
+
 	private func makeModel(
 		id: LanguageModel.ID = OpenAIModelCatalog.lunaId
 	) throws -> LanguageModel {
@@ -173,7 +208,7 @@ struct ChatLLMChatServiceTests {
 	}
 
 	private func makeResponse(
-		id: String,
+		id: String?,
 		text: String,
 		modelId: LanguageModel.ID = OpenAIModelCatalog.lunaId
 	) -> ChatLLMResponse {

@@ -19,11 +19,11 @@ and hosted models, with all the provider-specific plumbing tucked out of sight.
 ## Features
 
 - Chat with Apple's on-device Foundation Model on supported devices.
-- Chat with supported OpenAI, Anthropic, and Google Gemini models through a Supabase Edge Function.
+- Chat with supported OpenAI, Anthropic, and Google Gemini models through OpenRouter behind a Supabase Edge Function.
 - Choose models grouped by provider, with short descriptions and availability
   information.
 - Persist chat history locally and restore conversations across app launches.
-- Continue hosted conversations using local transcripts and provider continuations when available.
+- Continue hosted conversations using their locally saved transcripts.
 - Surface safe backend errors and request identifiers for troubleshooting.
 - Cover the client and backend contract with Swift Testing and Deno tests.
 
@@ -43,17 +43,23 @@ There are two main pieces:
 - `ChatLLM/` — the SwiftUI app. Each conversation gets its own provider service
   and sticks with one model.
 - `supabase/functions/` — a lightweight backend that validates the public chat
-  contract, keeps provider credentials on the server, and calls the selected
-  hosted model.
+  contract, keeps the OpenRouter API key on the server, and calls the selected
+  hosted model through one OpenRouter adapter.
 
-For hosted models, the app sends the provider, model, local transcript, and
-optional continuation ID to the backend. The backend gets the final say on which
-provider and model combinations are supported.
+For hosted models, the app sends the model author, model, and local transcript to
+the backend. The backend maps the stable ChatLLM model identifiers to an explicit
+OpenRouter allowlist. OpenRouter automatically chooses an available hosting
+endpoint for that model, with its default endpoint fallback behavior. The app's
+`provider` field still identifies the model author (OpenAI, Anthropic, or Google),
+not the hosting endpoint. Requests do not add privacy restrictions beyond the
+OpenRouter account's settings.
 
-The app stores chats and messages locally with SwiftData. It also persists the
-opaque continuation IDs that can optimize supported hosted conversations. On-device
-Foundation Models sessions are reconstructed from their saved transcripts when
-the app launches again.
+The app stores chats and messages locally with SwiftData. Hosted requests send
+the full transcript on every turn. Legacy continuation IDs are accepted and
+ignored by the backend, and cleared by the app after the next successful reply.
+Existing chat and model IDs are preserved, so no database migration is needed.
+On-device Foundation Models sessions are reconstructed from their saved
+transcripts when the app launches again.
 
 The full API contract lives in [docs/chat-api.md](docs/chat-api.md).
 
@@ -83,7 +89,7 @@ the model being ready.
 - Xcode with the iOS 26.5 SDK or newer.
 - An iOS 26.5 simulator or device.
 - An Apple Intelligence-capable device to use the on-device model.
-- A Supabase project and the corresponding provider API keys to use hosted models.
+- A Supabase project and an OpenRouter API key with available credits to use hosted models.
 - Supabase CLI and Deno when developing or testing the backend locally.
 
 ## Getting Started
@@ -102,7 +108,7 @@ the model being ready.
 
 The local configuration file is ignored by Git. The Supabase publishable key
 is okay to include in a client app, but Supabase secret credentials and the
-OpenAI, Anthropic, and Gemini API keys should never be added to the iOS project.
+OpenRouter API key should never be added to the iOS project.
 
 You can still run the app without any backend configuration. The hosted models
 will show up as unavailable, but the Apple Foundation Model will work if the
@@ -110,17 +116,19 @@ device supports it.
 
 ## Backend Setup
 
-To use the hosted models, link the repo to a Supabase project, add the provider
-secrets, and deploy the chat function:
+To use the hosted models, link the repo to a Supabase project, add the OpenRouter
+secret, and deploy the chat function:
 
 ```sh
 supabase link --project-ref <project-ref>
-supabase secrets set \
-  OPENAI_API_KEY=<openai-api-key> \
-  ANTHROPIC_API_KEY=<anthropic-api-key> \
-  GEMINI_API_KEY=<gemini-api-key>
+supabase secrets set OPENROUTER_API_KEY=<openrouter-api-key>
 supabase functions deploy chat
 ```
+
+The secret can also be set in the Supabase dashboard. The iOS app continues to
+use the Supabase publishable key; do not put the OpenRouter key in its plist.
+The previous `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `GEMINI_API_KEY` secrets
+are no longer used by this version.
 
 After deployment, use the function URL and the project's publishable key in
 `ChatLLMConfiguration.plist`.
@@ -138,18 +146,37 @@ simulator from the command line:
 xcodebuild test \
   -project ChatLLM.xcodeproj \
   -scheme ChatLLM \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5'
 ```
 
 Run the backend unit tests with Deno:
 
 ```sh
-cd supabase/functions/chat
-deno test --allow-env --allow-net ../_shared
+deno test supabase/functions/_shared
+deno lint supabase/functions/_shared supabase/functions/chat/index.ts
 ```
 
-The backend tests use fake provider responses, so they don't make live provider
-requests.
+The backend tests use fake OpenRouter responses and require no API keys or
+network permissions. They cover the public handler, model allowlist, full
+transcripts with legacy continuations, response parsing, and safe error mapping.
+
+## Deploying the OpenRouter Migration
+
+1. Confirm `OPENROUTER_API_KEY` is set in the linked Supabase project and the
+   OpenRouter account has available credits.
+2. Run the backend and iOS tests above, then deploy with
+   `supabase functions deploy chat`.
+3. Send a short message using one OpenAI, one Anthropic, and one Gemini model.
+   Confirm each receives a reply and subsequent turns retain context.
+4. Reopen an existing OpenAI or Gemini conversation and continue it. The saved
+   transcript should work even if it still contains a legacy continuation ID.
+5. After verification, remove the unused direct-provider secrets if desired.
+   Retain them until then if you want to be able to redeploy the previous backend.
+
+All ten existing remote models were present in the
+[OpenRouter catalog](https://openrouter.ai/api/v1/models) when checked on
+October 11, 2026. Catalog availability does not verify account-specific access;
+the post-deployment checks above exercise that access.
 
 ## Current Limitations
 

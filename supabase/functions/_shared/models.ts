@@ -1,42 +1,59 @@
-const openAIModels: ReadonlySet<string> = new Set([
-  "gpt-5.6-luna",
-  "gpt-5.6-terra",
-  "gpt-5.6-sol",
-  "gpt-6-astra",
-]);
+import { ChatAPIError } from "./errors.ts";
 
-const anthropicModels: ReadonlySet<string> = new Set([
-  "claude-opus-5",
-  "claude-sonnet-5",
-  "claude-haiku-4-5",
-]);
+/** Stable ChatLLM model IDs mapped to OpenRouter's catalog IDs. */
+export const openRouterModels = {
+  openai: {
+    "gpt-5.6-luna": "openai/gpt-5.6-luna",
+    "gpt-5.6-terra": "openai/gpt-5.6-terra",
+    "gpt-5.6-sol": "openai/gpt-5.6-sol",
+    "gpt-6-astra": "openai/gpt-6-astra",
+  },
+  anthropic: {
+    "claude-opus-5": "anthropic/claude-opus-5",
+    "claude-sonnet-5": "anthropic/claude-sonnet-5",
+    "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+  },
+  google: {
+    "gemini-3.6-flash": "google/gemini-3.6-flash",
+    "gemini-3.5-flash": "google/gemini-3.5-flash",
+    "gemini-3.5-flash-lite": "google/gemini-3.5-flash-lite",
+  },
+} as const satisfies Readonly<Record<string, Readonly<Record<string, string>>>>;
 
-const googleModels: ReadonlySet<string> = new Set([
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
-  "gemini-3.5-flash-lite",
-]);
+export type SupportedProvider = keyof typeof openRouterModels;
 
-/** Provider and model combinations accepted by the Chat API. */
-export const supportedModels = {
-  openai: openAIModels,
-  anthropic: anthropicModels,
-  google: googleModels,
-} as const satisfies Readonly<Record<string, ReadonlySet<string>>>;
-
-export type SupportedProvider = keyof typeof supportedModels;
-
-/** Returns whether the provider is registered with the Chat API. */
+/** Returns whether the model author is registered with the Chat API. */
 export function isSupportedProvider(
   provider: string,
 ): provider is SupportedProvider {
-  return Object.hasOwn(supportedModels, provider);
+  return Object.hasOwn(openRouterModels, provider);
 }
 
-/** Returns whether the model is accepted for a registered provider. */
+/** Returns whether the model is accepted for a registered author. */
 export function isSupportedModel(
   provider: SupportedProvider,
   model: string,
 ): boolean {
-  return supportedModels[provider].has(model);
+  return Object.hasOwn(openRouterModels[provider], model);
+}
+
+/** Resolves only allowlisted models, preserving existing app and stored IDs. */
+export function resolveOpenRouterModel(
+  provider: string,
+  model: string,
+): string {
+  if (!isSupportedProvider(provider)) {
+    throw new ChatAPIError(
+      "unsupported_provider",
+      `Provider '${provider}' is not supported.`,
+    );
+  }
+  if (!isSupportedModel(provider, model)) {
+    throw new ChatAPIError(
+      "unsupported_model",
+      `Model '${model}' is not supported by provider '${provider}'.`,
+    );
+  }
+  const models: Readonly<Record<string, string>> = openRouterModels[provider];
+  return models[model];
 }
