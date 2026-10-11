@@ -120,6 +120,59 @@ struct ChatListViewModelTests {
 		#expect(recorder.continuationId == "response-1")
 	}
 
+	@Test(
+		"Older conversations remain visible with their original model after the catalog refresh",
+		arguments: [
+			("openai", "gpt-5.6-luna", "GPT-5.6 Luna"),
+			("openai", "gpt-5.6-terra", "GPT-5.6 Terra"),
+			("openai", "gpt-5.6-sol", "GPT-5.6 Sol"),
+			("anthropic", "claude-opus-5", "Claude Opus 5"),
+			("anthropic", "claude-sonnet-5", "Claude Sonnet 5"),
+			("anthropic", "claude-haiku-4-5", "Claude Haiku 4.5"),
+			("google", "gemini-3.6-flash", "Gemini 3.6 Flash"),
+			("google", "gemini-3.5-flash", "Gemini 3.5 Flash")
+		]
+	)
+	func restoresLegacyChat(example: (String, String, String)) throws {
+		let (providerId, modelId, displayName) = example
+		let container = try makeChatListModelContainer()
+		let context = container.mainContext
+		let chat = Chat(
+			providerId: providerId,
+			modelId: modelId,
+			continuationId: "legacy-continuation",
+			messages: [
+				ChatMessage(sequence: 0, text: "Original question", role: .user),
+				ChatMessage(sequence: 1, text: "Original reply", role: .assistant)
+			]
+		)
+		context.insert(chat)
+		try context.save()
+		context.rollback()
+		let configuration = try #require(
+			ChatLLMConfiguration(
+				endpoint: "https://example.supabase.co/functions/v1/chat",
+				publishableKey: "sb_publishable_test"
+			)
+		)
+		let viewModel = ChatListViewModel(
+			modelContext: context,
+			providerFactory: ChatProviderFactory(chatLLMConfiguration: configuration)
+		)
+
+		let restored = try #require(viewModel.visibleChats.first)
+		#expect(restored.id == chat.id)
+		#expect(restored.model.id == modelId)
+		#expect(restored.model.providerId == providerId)
+		#expect(restored.model.displayName == displayName)
+		#expect(restored.model.availability.isAvailable)
+		#expect(restored.messages.map(\.text) == ["Original question", "Original reply"])
+		#expect(restored.chat.continuationId == "legacy-continuation")
+		#expect(viewModel.models.contains { $0.id == modelId } == false)
+		#expect(viewModel.createChat(using: restored.model) == nil)
+		#expect(try context.fetchCount(FetchDescriptor<Chat>()) == 1)
+	}
+
 	@Test("Loading skips chats for unsupported models")
 	func skipsUnsupportedSavedChat() throws {
 		let container = try makeChatListModelContainer()

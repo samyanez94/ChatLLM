@@ -65,20 +65,23 @@ The full API contract lives in [docs/chat-api.md](docs/chat-api.md).
 
 ## Supported Models
 
-The current lineup includes:
+New conversations offer Apple's on-device model and eight remote choices:
 
 - Apple Foundation Model — private, on-device generation through Apple's
   Foundation Models framework.
-- GPT-5.6 Luna — the fast and economical OpenAI option.
-- GPT-5.6 Terra — the balanced OpenAI option.
-- GPT-5.6 Sol — a highly capable OpenAI option for complex problems and coding.
+- GPT-6 Luna — the fast and economical OpenAI option.
+- GPT-6.1 Sol — the balanced OpenAI option for coding and everyday work.
 - GPT-6 Astra — the most capable OpenAI option, using low reasoning by default.
-- Claude Opus 5 — Anthropic's powerful option for complex coding and knowledge work.
-- Claude Sonnet 5 — Anthropic's balanced option for everyday conversations.
-- Claude Haiku 4.5 — Anthropic's fastest option for simple and frequent tasks.
-- Gemini 3.6 Flash — Google's strong general-purpose option.
-- Gemini 3.5 Flash — Google's balanced option for sustained work.
+- Claude Opus 5.5 — Anthropic's powerful option for complex coding and knowledge work.
+- Claude Sonnet 5.5 — Anthropic's balanced option for everyday conversations.
+- Claude Haiku 5.5 — Anthropic's fast and economical option for frequent tasks.
+- Gemini 3.8 Flash — Google's capable general-purpose option.
 - Gemini 3.5 Flash-Lite — Google's fast and economical option.
+
+Saved conversations retain their original model. GPT-5.6 Luna/Terra/Sol,
+Claude Opus 5/Sonnet 5/Haiku 4.5, and Gemini 3.6 Flash/3.5 Flash remain supported
+for those chats, but are hidden from the new-chat picker. Their identifiers are
+not remapped to newer versions, and no database migration is required.
 
 The hosted models need the ChatLLM backend to be configured. The Apple model
 depends on the device supporting Apple Intelligence, having it enabled, and
@@ -173,10 +176,23 @@ transcripts with legacy continuations, response parsing, and safe error mapping.
 5. After verification, remove the unused direct-provider secrets if desired.
    Retain them until then if you want to be able to redeploy the previous backend.
 
-All ten existing remote models were present in the
+All sixteen current and legacy remote models were present in the
 [OpenRouter catalog](https://openrouter.ai/api/v1/models) when checked on
 October 11, 2026. Catalog availability does not verify account-specific access;
 the post-deployment checks above exercise that access.
+
+## Rolling Out a Model Catalog Update
+
+Deploy the backend allowlist before running or distributing the updated iOS app:
+
+```sh
+supabase functions deploy chat
+```
+
+The allowlist accepts both the eight current models and the eight older models
+retained for saved chats. Older app builds can continue using their existing
+lineup. In the updated app, verify that new chats show the refreshed choices and
+that older conversations reopen with their original model name and history.
 
 ## Current Limitations
 

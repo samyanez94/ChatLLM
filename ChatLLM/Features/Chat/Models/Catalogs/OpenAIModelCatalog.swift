@@ -5,47 +5,51 @@
 //  Created by Samuel Yanez on 8/15/26.
 //
 
-/// Describes the OpenAI models supported by the app.
+/// Describes current and restorable OpenAI models.
 enum OpenAIModelCatalog {
-	/// Stable identifier used by the ChatLLM API for OpenAI.
+	/// Stable model-author identifier used by the ChatLLM API.
 	nonisolated static let providerId = "openai"
 
-	/// The stable OpenAI API identifier for GPT-5.6 Luna.
-	nonisolated static let lunaId = "gpt-5.6-luna"
+	/// The stable ChatLLM identifier for GPT-6 Luna.
+	nonisolated static let lunaId = "gpt-6-luna"
 
-	/// The stable OpenAI API identifier for GPT-5.6 Terra.
-	nonisolated static let terraId = "gpt-5.6-terra"
+	/// The stable ChatLLM identifier for GPT-6.1 Sol.
+	nonisolated static let solId = "gpt-6.1-sol"
 
-	/// The stable OpenAI API identifier for GPT-5.6 Sol.
-	nonisolated static let solId = "gpt-5.6-sol"
-
-	/// The stable OpenAI API identifier for GPT-6 Astra.
+	/// The stable ChatLLM identifier for GPT-6 Astra.
 	nonisolated static let astraId = "gpt-6-astra"
 
-	/// Model identifiers accepted by the app and ChatLLM backend.
-	nonisolated static let modelIds = [lunaId, terraId, solId, astraId]
+	/// The stable ChatLLM identifier for GPT-5.6 Luna.
+	nonisolated static let legacyLunaId = "gpt-5.6-luna"
 
-	/// Creates metadata for every supported OpenAI model.
+	/// The stable ChatLLM identifier for GPT-5.6 Terra.
+	nonisolated static let legacyTerraId = "gpt-5.6-terra"
+
+	/// The stable ChatLLM identifier for GPT-5.6 Sol.
+	nonisolated static let legacySolId = "gpt-5.6-sol"
+
+	/// Model identifiers offered for new conversations.
+	nonisolated static let modelIds = [lunaId, solId, astraId]
+
+	/// Older model identifiers retained for saved conversations.
+	nonisolated static let legacyModelIds = [legacyLunaId, legacyTerraId, legacySolId]
+
+	/// Creates picker metadata, optionally including models needed to restore chats.
 	static func models(
-		isConfigured: Bool = ChatLLMConfiguration() != nil
+		isConfigured: Bool = ChatLLMConfiguration() != nil,
+		includeLegacy: Bool = false
 	) -> [LanguageModel] {
-		[
+		let currentModels = [
 			model(
 				id: lunaId,
-				displayName: "GPT-5.6 Luna",
+				displayName: "GPT-6 Luna",
 				summary: "Fast and economical. Best for simple questions and frequent use.",
 				isConfigured: isConfigured
 			),
 			model(
-				id: terraId,
-				displayName: "GPT-5.6 Terra",
-				summary: "A strong balance of capability and cost. Best for most conversations.",
-				isConfigured: isConfigured
-			),
-			model(
 				id: solId,
-				displayName: "GPT-5.6 Sol",
-				summary: "Highly capable. Best for complex problems and coding.",
+				displayName: "GPT-6.1 Sol",
+				summary: "A strong balance of capability and cost for coding and everyday work.",
 				isConfigured: isConfigured
 			),
 			model(
@@ -55,14 +59,37 @@ enum OpenAIModelCatalog {
 				isConfigured: isConfigured
 			)
 		]
+		guard includeLegacy else {
+			return currentModels
+		}
+		return currentModels + [
+			model(
+				id: legacyLunaId,
+				displayName: "GPT-5.6 Luna",
+				summary: "Fast and economical. Best for simple questions and frequent use.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: legacyTerraId,
+				displayName: "GPT-5.6 Terra",
+				summary: "A strong balance of capability and cost. Best for most conversations.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: legacySolId,
+				displayName: "GPT-5.6 Sol",
+				summary: "Highly capable. Best for complex problems and coding.",
+				isConfigured: isConfigured
+			)
+		]
 	}
 
-	/// Returns metadata for a supported OpenAI model identifier.
+	/// Looks up both current and legacy models without changing their identity.
 	static func model(
 		withId modelId: LanguageModel.ID,
 		isConfigured: Bool = ChatLLMConfiguration() != nil
 	) -> LanguageModel? {
-		models(isConfigured: isConfigured).first { $0.id == modelId }
+		models(isConfigured: isConfigured, includeLegacy: true).first { $0.id == modelId }
 	}
 
 	private static func model(
@@ -77,18 +104,11 @@ enum OpenAIModelCatalog {
 			providerId: providerId,
 			providerName: "OpenAI",
 			summary: summary,
-			availability: availability(isConfigured: isConfigured)
+			availability: isConfigured
+				? .available
+				: .unavailable(
+					message: "Add the ChatLLM backend configuration to use this model."
+				)
 		)
-	}
-
-	private static func availability(
-		isConfigured: Bool
-	) -> LanguageModelAvailability {
-		guard isConfigured else {
-			return .unavailable(
-				message: "Add the ChatLLM backend configuration to use this model."
-			)
-		}
-		return .available
 	}
 }

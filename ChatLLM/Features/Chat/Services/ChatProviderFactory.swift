@@ -12,17 +12,40 @@ struct ChatProviderFactory: ChatProviderCreating {
 		self.chatLLMConfiguration = chatLLMConfiguration
 	}
 
-	/// The models supported by the app.
+	/// The models offered for new conversations.
 	var models: [LanguageModel] {
+		makeModels(includeLegacy: false)
+	}
+
+	/// Includes older models so saved conversations retain their original model.
+	var supportedModels: [LanguageModel] {
+		makeModels(includeLegacy: true)
+	}
+
+	private func makeModels(includeLegacy: Bool) -> [LanguageModel] {
 		[FoundationModelsChatService().model]
-			+ OpenAIModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
-			+ AnthropicModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
-			+ GeminiModelCatalog.models(isConfigured: chatLLMConfiguration != nil)
+			+ OpenAIModelCatalog.models(
+				isConfigured: chatLLMConfiguration != nil,
+				includeLegacy: includeLegacy
+			)
+			+ AnthropicModelCatalog.models(
+				isConfigured: chatLLMConfiguration != nil,
+				includeLegacy: includeLegacy
+			)
+			+ GeminiModelCatalog.models(
+				isConfigured: chatLLMConfiguration != nil,
+				includeLegacy: includeLegacy
+			)
 	}
 
 	/// Creates a fresh provider session for a supported model.
 	func makeProvider(for selectedModel: LanguageModel) -> (any ChatProviding)? {
-		makeProvider(
+		guard models.contains(where: {
+			$0.providerId == selectedModel.providerId && $0.id == selectedModel.id
+		}) else {
+			return nil
+		}
+		return makeProvider(
 			for: selectedModel,
 			messages: [],
 			continuationId: nil

@@ -87,7 +87,7 @@ final class ChatListViewModel {
 
 	private func makeViewModel(for chat: Chat) -> ChatViewModel? {
 		guard
-			let model = providerFactory.models.first(where: {
+			let model = providerFactory.supportedModels.first(where: {
 				$0.providerId == chat.providerId && $0.id == chat.modelId
 			}),
 			let provider = providerFactory.restoreProvider(

@@ -11,7 +11,21 @@ import Testing
 
 @MainActor
 struct ChatProviderFactoryTests {
-	@Test("The model catalog includes the GPT-5.6 family and GPT-6 Astra")
+	@Test("New chats offer eight remote choices and the on-device model")
+	func offersRefreshedLineup() throws {
+		let factory = ChatProviderFactory(chatLLMConfiguration: try makeConfiguration())
+
+		#expect(factory.models.map(\.id) == [
+			"apple-foundation-model",
+			"gpt-6-luna", "gpt-6.1-sol", "gpt-6-astra",
+			"claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5",
+			"gemini-3.8-flash", "gemini-3.5-flash-lite"
+		])
+		#expect(factory.supportedModels.count == 17)
+		#expect(Set(factory.supportedModels.map(\.id)).count == 17)
+	}
+
+	@Test("The model catalog includes the current OpenAI family")
 	func includesOpenAIModels() throws {
 		let factory = ChatProviderFactory(
 			chatLLMConfiguration: try makeConfiguration()
@@ -25,7 +39,7 @@ struct ChatProviderFactoryTests {
 		#expect(openAIModels.allSatisfy { $0.providerName == "OpenAI" })
 		#expect(
 			openAIModels.map(\.displayName)
-				== ["GPT-5.6 Luna", "GPT-5.6 Terra", "GPT-5.6 Sol", "GPT-6 Astra"]
+				== ["GPT-6 Luna", "GPT-6.1 Sol", "GPT-6 Astra"]
 		)
 		#expect(openAIModels.allSatisfy { $0.availability.isAvailable })
 	}
@@ -63,7 +77,7 @@ struct ChatProviderFactoryTests {
 		#expect(models.allSatisfy { $0.providerName == "Anthropic" })
 		#expect(
 			models.map(\.displayName)
-				== ["Claude Opus 5", "Claude Sonnet 5", "Claude Haiku 4.5"]
+				== ["Claude Opus 5.5", "Claude Sonnet 5.5", "Claude Haiku 5.5"]
 		)
 		#expect(models.allSatisfy { $0.availability.isAvailable })
 	}
@@ -79,12 +93,13 @@ struct ChatProviderFactoryTests {
 
 		#expect(models.map(\.id) == GeminiModelCatalog.modelIds)
 		#expect(models.allSatisfy { $0.providerName == "Google" })
+		#expect(models.map(\.displayName) == ["Gemini 3.8 Flash", "Gemini 3.5 Flash-Lite"])
 		let model = try #require(
-			models.first { $0.id == GeminiModelCatalog.flash36Id }
+			models.first { $0.id == GeminiModelCatalog.flash38Id }
 		)
 		let provider = try #require(factory.makeProvider(for: model))
 		#expect(provider is ChatLLMChatService)
-		#expect(provider.model.id == GeminiModelCatalog.flash36Id)
+		#expect(provider.model.id == GeminiModelCatalog.flash38Id)
 	}
 
 	@Test(

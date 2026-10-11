@@ -6,8 +6,11 @@
 
 /// Creates fresh provider sessions for the models supported by the app.
 protocol ChatProviderCreating {
-	/// The models supported by the app.
+	/// The models offered for new conversations.
 	var models: [LanguageModel] { get }
+
+	/// All supported models, including older models needed to restore saved chats.
+	var supportedModels: [LanguageModel] { get }
 
 	/// Creates a fresh provider session for a model.
 	/// - Parameter model: The requested model and its stable provider identity.
@@ -20,4 +23,10 @@ protocol ChatProviderCreating {
 		messages: [ChatMessage],
 		continuationId: String?
 	) -> (any ChatProviding)?
+}
+
+extension ChatProviderCreating {
+	var supportedModels: [LanguageModel] {
+		models
+	}
 }

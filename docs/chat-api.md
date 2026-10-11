@@ -89,22 +89,30 @@ The backend validates requests in this order:
 4. Map the model to its allowlisted OpenRouter ID.
 5. Invoke the OpenRouter adapter with the full transcript.
 
-In v1, the supported catalog is equivalent to:
+The new-chat picker offers eight remote models. The backend additionally keeps
+eight legacy model IDs available for saved conversations and older app builds.
+The supported catalog is equivalent to:
 
 ```ts
 const supportedModels = {
   openai: new Set([
+    "gpt-6-luna",
+    "gpt-6.1-sol",
     "gpt-5.6-luna",
     "gpt-5.6-terra",
     "gpt-5.6-sol",
     "gpt-6-astra",
   ]),
   anthropic: new Set([
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5",
     "claude-opus-5",
     "claude-sonnet-5",
     "claude-haiku-4-5",
   ]),
   google: new Set([
+    "gemini-3.8-flash",
     "gemini-3.6-flash",
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -123,6 +131,12 @@ explicit mapping (verified against OpenRouter's catalog on October 11, 2026):
 
 | Provider | ChatLLM model ID | OpenRouter model ID |
 | --- | --- | --- |
+| `openai` | `gpt-6-luna` | `openai/gpt-6-luna` |
+| `openai` | `gpt-6.1-sol` | `openai/gpt-6.1-sol` |
+| `anthropic` | `claude-opus-5-5` | `anthropic/claude-opus-5.5` |
+| `anthropic` | `claude-sonnet-5-5` | `anthropic/claude-sonnet-5.5` |
+| `anthropic` | `claude-haiku-5-5` | `anthropic/claude-haiku-5.5` |
+| `google` | `gemini-3.8-flash` | `google/gemini-3.8-flash` |
 | `openai` | `gpt-5.6-luna` | `openai/gpt-5.6-luna` |
 | `openai` | `gpt-5.6-terra` | `openai/gpt-5.6-terra` |
 | `openai` | `gpt-5.6-sol` | `openai/gpt-5.6-sol` |
@@ -133,6 +147,13 @@ explicit mapping (verified against OpenRouter's catalog on October 11, 2026):
 | `google` | `gemini-3.6-flash` | `google/gemini-3.6-flash` |
 | `google` | `gemini-3.5-flash` | `google/gemini-3.5-flash` |
 | `google` | `gemini-3.5-flash-lite` | `google/gemini-3.5-flash-lite` |
+
+The current picker includes GPT-6 Luna, GPT-6.1 Sol, GPT-6 Astra, Claude Opus 5.5,
+Sonnet 5.5, Haiku 5.5, Gemini 3.8 Flash, and Gemini 3.5 Flash-Lite. All other IDs
+in this table retain their original meaning for existing conversations. The iOS
+factory uses the full supported catalog when restoring chats and the current
+catalog when creating them. No saved model ID is rewritten during this update.
+Deploy this expanded allowlist before releasing the updated iOS picker.
 
 The adapter calls `POST https://openrouter.ai/api/v1/chat/completions` with
 `stream: false` and a server-side `OPENROUTER_API_KEY`. It uses OpenRouter's

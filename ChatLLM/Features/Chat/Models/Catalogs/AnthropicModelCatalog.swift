@@ -5,55 +5,91 @@
 //  Created by ChatLLM on 8/17/26.
 //
 
-/// Describes the Anthropic models supported by the app.
+/// Describes current and restorable Anthropic models.
 enum AnthropicModelCatalog {
-	/// Stable identifier used by the ChatLLM API for Anthropic.
+	/// Stable model-author identifier used by the ChatLLM API.
 	nonisolated static let providerId = "anthropic"
 
-	/// The current Claude Opus alias.
-	nonisolated static let opusId = "claude-opus-5"
+	/// The stable ChatLLM identifier for Claude Opus 5.5.
+	nonisolated static let opusId = "claude-opus-5-5"
 
-	/// The current Claude Sonnet alias.
-	nonisolated static let sonnetId = "claude-sonnet-5"
+	/// The stable ChatLLM identifier for Claude Sonnet 5.5.
+	nonisolated static let sonnetId = "claude-sonnet-5-5"
 
-	/// The current Claude Haiku alias.
-	nonisolated static let haikuId = "claude-haiku-4-5"
+	/// The stable ChatLLM identifier for Claude Haiku 5.5.
+	nonisolated static let haikuId = "claude-haiku-5-5"
 
-	/// Model identifiers accepted by the app and ChatLLM backend.
+	/// The stable ChatLLM identifier for Claude Opus 5.
+	nonisolated static let legacyOpusId = "claude-opus-5"
+
+	/// The stable ChatLLM identifier for Claude Sonnet 5.
+	nonisolated static let legacySonnetId = "claude-sonnet-5"
+
+	/// The stable ChatLLM identifier for Claude Haiku 4.5.
+	nonisolated static let legacyHaikuId = "claude-haiku-4-5"
+
+	/// Model identifiers offered for new conversations.
 	nonisolated static let modelIds = [opusId, sonnetId, haikuId]
 
-	/// Creates metadata for every supported Anthropic model.
+	/// Older model identifiers retained for saved conversations.
+	nonisolated static let legacyModelIds = [legacyOpusId, legacySonnetId, legacyHaikuId]
+
+	/// Creates picker metadata, optionally including models needed to restore chats.
 	static func models(
-		isConfigured: Bool = ChatLLMConfiguration() != nil
+		isConfigured: Bool = ChatLLMConfiguration() != nil,
+		includeLegacy: Bool = false
 	) -> [LanguageModel] {
-		[
+		let currentModels = [
 			model(
 				id: opusId,
-				displayName: "Claude Opus 5",
+				displayName: "Claude Opus 5.5",
 				summary: "Powerful reasoning for complex coding and knowledge work.",
 				isConfigured: isConfigured
 			),
 			model(
 				id: sonnetId,
-				displayName: "Claude Sonnet 5",
+				displayName: "Claude Sonnet 5.5",
 				summary: "A fast, capable balance for everyday conversations.",
 				isConfigured: isConfigured
 			),
 			model(
 				id: haikuId,
+				displayName: "Claude Haiku 5.5",
+				summary: "Fast and economical for simple and frequent tasks.",
+				isConfigured: isConfigured
+			)
+		]
+		guard includeLegacy else {
+			return currentModels
+		}
+		return currentModels + [
+			model(
+				id: legacyOpusId,
+				displayName: "Claude Opus 5",
+				summary: "Powerful reasoning for complex coding and knowledge work.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: legacySonnetId,
+				displayName: "Claude Sonnet 5",
+				summary: "A fast, capable balance for everyday conversations.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: legacyHaikuId,
 				displayName: "Claude Haiku 4.5",
-				summary: "The fastest Claude option for simple and frequent tasks.",
+				summary: "Fast responses for simple and frequent tasks.",
 				isConfigured: isConfigured
 			)
 		]
 	}
 
-	/// Returns metadata for a supported Anthropic model identifier.
+	/// Looks up both current and legacy models without changing their identity.
 	static func model(
 		withId modelId: LanguageModel.ID,
 		isConfigured: Bool = ChatLLMConfiguration() != nil
 	) -> LanguageModel? {
-		models(isConfigured: isConfigured).first { $0.id == modelId }
+		models(isConfigured: isConfigured, includeLegacy: true).first { $0.id == modelId }
 	}
 
 	private static func model(

@@ -3,17 +3,26 @@ import { ChatAPIError } from "./errors.ts";
 /** Stable ChatLLM model IDs mapped to OpenRouter's catalog IDs. */
 export const openRouterModels = {
   openai: {
+    "gpt-6-luna": "openai/gpt-6-luna",
+    "gpt-6.1-sol": "openai/gpt-6.1-sol",
+    "gpt-6-astra": "openai/gpt-6-astra",
+    // Retain original model identities for existing chats and older clients.
     "gpt-5.6-luna": "openai/gpt-5.6-luna",
     "gpt-5.6-terra": "openai/gpt-5.6-terra",
     "gpt-5.6-sol": "openai/gpt-5.6-sol",
-    "gpt-6-astra": "openai/gpt-6-astra",
   },
   anthropic: {
+    "claude-opus-5-5": "anthropic/claude-opus-5.5",
+    "claude-sonnet-5-5": "anthropic/claude-sonnet-5.5",
+    "claude-haiku-5-5": "anthropic/claude-haiku-5.5",
+    // Older conversations continue with the model originally selected.
     "claude-opus-5": "anthropic/claude-opus-5",
     "claude-sonnet-5": "anthropic/claude-sonnet-5",
     "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
   },
   google: {
+    "gemini-3.8-flash": "google/gemini-3.8-flash",
+    // Older Flash versions remain available for existing conversations.
     "gemini-3.6-flash": "google/gemini-3.6-flash",
     "gemini-3.5-flash": "google/gemini-3.5-flash",
     "gemini-3.5-flash-lite": "google/gemini-3.5-flash-lite",

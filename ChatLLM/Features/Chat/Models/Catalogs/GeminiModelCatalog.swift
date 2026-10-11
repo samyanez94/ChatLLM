@@ -3,38 +3,39 @@
 //  ChatLLM
 //
 
-/// Describes the Google Gemini models supported by the app.
+/// Describes current and restorable Google models.
 enum GeminiModelCatalog {
-	/// Stable identifier used by the ChatLLM API for Google Gemini.
+	/// Stable model-author identifier used by the ChatLLM API.
 	nonisolated static let providerId = "google"
 
-	/// Google's capable, general-purpose Gemini model.
-	nonisolated static let flash36Id = "gemini-3.6-flash"
+	/// The stable ChatLLM identifier for Gemini 3.8 Flash.
+	nonisolated static let flash38Id = "gemini-3.8-flash"
 
-	/// Google's balanced Gemini model for sustained work.
-	nonisolated static let flash35Id = "gemini-3.5-flash"
-
-	/// Google's fastest and most economical Gemini model.
+	/// The stable ChatLLM identifier for Gemini 3.5 Flash-Lite.
 	nonisolated static let flashLite35Id = "gemini-3.5-flash-lite"
 
-	/// Model identifiers accepted by the app and ChatLLM backend.
-	nonisolated static let modelIds = [flash36Id, flash35Id, flashLite35Id]
+	/// The stable ChatLLM identifier for Gemini 3.6 Flash.
+	nonisolated static let legacyFlash36Id = "gemini-3.6-flash"
 
-	/// Creates metadata for every supported Gemini model.
+	/// The stable ChatLLM identifier for Gemini 3.5 Flash.
+	nonisolated static let legacyFlash35Id = "gemini-3.5-flash"
+
+	/// Model identifiers offered for new conversations.
+	nonisolated static let modelIds = [flash38Id, flashLite35Id]
+
+	/// Older model identifiers retained for saved conversations.
+	nonisolated static let legacyModelIds = [legacyFlash36Id, legacyFlash35Id]
+
+	/// Creates picker metadata, optionally including models needed to restore chats.
 	static func models(
-		isConfigured: Bool = ChatLLMConfiguration() != nil
+		isConfigured: Bool = ChatLLMConfiguration() != nil,
+		includeLegacy: Bool = false
 	) -> [LanguageModel] {
-		[
+		let currentModels = [
 			model(
-				id: flash36Id,
-				displayName: "Gemini 3.6 Flash",
+				id: flash38Id,
+				displayName: "Gemini 3.8 Flash",
 				summary: "Strong intelligence and speed for complex everyday work.",
-				isConfigured: isConfigured
-			),
-			model(
-				id: flash35Id,
-				displayName: "Gemini 3.5 Flash",
-				summary: "A capable balance for coding and longer conversations.",
 				isConfigured: isConfigured
 			),
 			model(
@@ -44,14 +45,31 @@ enum GeminiModelCatalog {
 				isConfigured: isConfigured
 			)
 		]
+		guard includeLegacy else {
+			return currentModels
+		}
+		return currentModels + [
+			model(
+				id: legacyFlash36Id,
+				displayName: "Gemini 3.6 Flash",
+				summary: "Strong intelligence and speed for complex everyday work.",
+				isConfigured: isConfigured
+			),
+			model(
+				id: legacyFlash35Id,
+				displayName: "Gemini 3.5 Flash",
+				summary: "A capable balance for coding and longer conversations.",
+				isConfigured: isConfigured
+			)
+		]
 	}
 
-	/// Returns metadata for a supported Gemini model identifier.
+	/// Looks up both current and legacy models without changing their identity.
 	static func model(
 		withId modelId: LanguageModel.ID,
 		isConfigured: Bool = ChatLLMConfiguration() != nil
 	) -> LanguageModel? {
-		models(isConfigured: isConfigured).first { $0.id == modelId }
+		models(isConfigured: isConfigured, includeLegacy: true).first { $0.id == modelId }
 	}
 
 	private static func model(
