@@ -25,6 +25,10 @@ final class ChatViewModel: Identifiable {
 
 	private(set) var streamingText = ""
 
+	private(set) var responseID: UUID?
+
+	private(set) var isStopping = false
+
 	@ObservationIgnored private var responseTask: Task<Void, Never>?
 
 	@ObservationIgnored private var interruptionStatus = ChatMessageStatus.interrupted
@@ -148,6 +152,8 @@ final class ChatViewModel: Identifiable {
 
 		draft = ""
 		isResponding = true
+		responseID = UUID()
+		isStopping = false
 		streamingText = ""
 		interruptionStatus = .interrupted
 		let task = Task {
@@ -164,6 +170,7 @@ final class ChatViewModel: Identifiable {
 	/// Stops generation while keeping any text already received.
 	func stopResponse() {
 		interruptionStatus = .stopped
+		isStopping = true
 		responseTask?.cancel()
 	}
 
@@ -192,7 +199,6 @@ final class ChatViewModel: Identifiable {
 				}
 				self.streamingText = text
 			}
-
 			try Task.checkCancellation()
 			streamingText = reply
 		} catch {
@@ -208,6 +214,7 @@ final class ChatViewModel: Identifiable {
 		}
 		if !streamingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
 			let reply = chat.appendMessage(text: streamingText, role: .assistant)
+			reply.id = responseID ?? reply.id
 			reply.status = status
 		}
 		chat.continuationId = status == .completed ? provider.continuationId : nil

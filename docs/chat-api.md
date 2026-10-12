@@ -192,7 +192,19 @@ Errors before streaming begins remain ordinary HTTP/JSON errors.
 Both remote providers and Apple's `LanguageModelSession.streamResponse` report
 cumulative text snapshots through `ChatProviding.streamReply`. Updates are consumed
 in the generation task; no independent token producer or unbounded queue is used.
-The view model displays each snapshot directly; SwiftUI updates the message bubble.
+The view model retains each snapshot immediately. Live replies use SwiftStreamingMarkdown’s
+`StreamedMarkdownView` through a small `StreamedMarkdownSource` adapter. Its
+`AsyncStream` buffers only the newest full-text snapshot, so a slow renderer does
+not accumulate stale updates. Completion delivers the final snapshot and finishes
+the sequence. The live reply keeps the same row identity when saved, allowing its animation to finish in place.
+Saved history uses `MarkdownView` without animation. Stop and Reduce Motion switch
+to that static renderer to discard any in-progress fade. Leaving the bubble also
+finishes its source; completed replies return as static history. Persistence does
+not wait for the animation.
+
+The renderer uses [SwiftStreamingMarkdown v0.7.0](https://github.com/microsoft/SwiftStreamingMarkdown/releases/tag/v0.7.0),
+pinned to its release commit because its own dependencies include revision pins
+that SwiftPM does not allow beneath a version-based dependency.
 
 The Stop button cancels the generation task and its URLSession request. Leaving a
 conversation or backgrounding the app also cancels generation. Partial text is

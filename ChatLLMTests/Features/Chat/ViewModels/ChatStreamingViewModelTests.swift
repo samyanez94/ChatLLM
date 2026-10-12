@@ -15,7 +15,10 @@ struct ChatStreamingViewModelTests {
 	@Test("Text appears before completion and is persisted only at the end")
 	func incrementalResponse() async throws {
 		let (container, provider, viewModel) = try makeViewModel()
+		var liveID: UUID?
 		provider.onSnapshot = {
+			liveID = viewModel.responseID
+			#expect(liveID != nil)
 			#expect(viewModel.streamingText == "First")
 			#expect(viewModel.isResponding)
 			#expect(!viewModel.canSend)
@@ -24,6 +27,7 @@ struct ChatStreamingViewModelTests {
 		await viewModel.sendMessage()
 		#expect(viewModel.messages.map(\.text) == ["Question", "First and last"])
 		#expect(viewModel.messages.last?.status == .completed)
+		#expect(viewModel.messages.last?.id == liveID)
 		#expect(viewModel.streamingText.isEmpty)
 		#expect(!viewModel.isResponding)
 		let context = ModelContext(container)
@@ -35,6 +39,7 @@ struct ChatStreamingViewModelTests {
 		let (container, provider, viewModel) = try makeViewModel()
 		provider.onSnapshot = {
 			viewModel.stopResponse()
+			#expect(viewModel.isStopping)
 		}
 		await viewModel.sendMessage()
 		#expect(viewModel.messages.last?.text == "First")

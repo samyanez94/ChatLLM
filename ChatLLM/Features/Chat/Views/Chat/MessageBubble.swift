@@ -4,13 +4,10 @@
 //
 //  Created by Samuel Yanez on 8/14/26.
 
-import MarkdownUI
+import SwiftStreamingMarkdown
 import SwiftUI
 
 struct MessageBubble: View {
-	private static let assistantTheme = Theme.gitHub.text {
-		BackgroundColor(.clear)
-	}
 
 	let text: String
 
@@ -18,15 +15,18 @@ struct MessageBubble: View {
 
 	var status: ChatMessageStatus = .completed
 
-	init(message: ChatMessage) {
-		text = message.text
-		role = message.role
-		status = message.status
-	}
+	var streamSource: StreamingMarkdownSource?
 
-	init(text: String, role: ChatMessageRole) {
+	init(
+		text: String,
+		role: ChatMessageRole,
+		status: ChatMessageStatus = .completed,
+		streamSource: StreamingMarkdownSource? = nil
+	) {
 		self.text = text
 		self.role = role
+		self.status = status
+		self.streamSource = streamSource
 	}
 
 	private var isUser: Bool {
@@ -61,9 +61,18 @@ struct MessageBubble: View {
 		if isUser {
 			Text(text)
 				.font(.body)
+		} else if let streamSource {
+			StreamedMarkdownView(
+				source: streamSource,
+				config: .default.withShouldAnimateText(value: true)
+			)
+			// The library retains its source in a StateObject. A new source needs a new renderer.
+			.id(ObjectIdentifier(streamSource))
 		} else {
-			Markdown(text)
-				.markdownTheme(Self.assistantTheme)
+			MarkdownView(
+				text: text,
+				config: .default.withShouldAnimateText(value: false)
+			)
 		}
 	}
 }

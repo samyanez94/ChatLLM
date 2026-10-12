@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9120020B3033F6DA004D49B5 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 9120020A3033F6DA004D49B5 /* OrderedCollections */; };
-		A10000000000000000000001 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000003 /* MarkdownUI */; };
+		A10000000000000000000001 /* SwiftStreamingMarkdown in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000003 /* SwiftStreamingMarkdown */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,7 +45,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9120020B3033F6DA004D49B5 /* OrderedCollections in Frameworks */,
-				A10000000000000000000001 /* MarkdownUI in Frameworks */,
+				A10000000000000000000001 /* SwiftStreamingMarkdown in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,7 +97,7 @@
 			);
 			name = ChatLLM;
 			packageProductDependencies = (
-				A10000000000000000000003 /* MarkdownUI */,
+				A10000000000000000000003 /* SwiftStreamingMarkdown */,
 				9120020A3033F6DA004D49B5 /* OrderedCollections */,
 			);
 			productName = ChatLLM;
@@ -156,7 +156,7 @@
 			mainGroup = 919237B7302FA64F0026C317;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				A10000000000000000000002 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */,
 				912002093033F6DA004D49B5 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -485,12 +485,12 @@
 				minimumVersion = 1.6.0;
 			};
 		};
-		A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+		A10000000000000000000002 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			repositoryURL = "https://github.com/microsoft/SwiftStreamingMarkdown";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.0;
+				kind = revision;
+				revision = 5f7c04e0558df6146f90d482edb62cb456986bda;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -501,10 +501,10 @@
 			package = 912002093033F6DA004D49B5 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
 		};
-		A10000000000000000000003 /* MarkdownUI */ = {
+		A10000000000000000000003 /* SwiftStreamingMarkdown */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
+			package = A10000000000000000000002 /* XCRemoteSwiftPackageReference "SwiftStreamingMarkdown" */;
+			productName = SwiftStreamingMarkdown;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

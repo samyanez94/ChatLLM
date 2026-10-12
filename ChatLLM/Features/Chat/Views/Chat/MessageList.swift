@@ -16,6 +16,10 @@ struct MessageList: View {
 
 	var streamingText = ""
 
+	var responseID: UUID?
+
+	var isStopping = false
+
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 
 	@State private var scrollPosition = ScrollPosition(edge: .bottom)
@@ -27,11 +31,17 @@ struct MessageList: View {
 	var body: some View {
 		ScrollView {
 			LazyVStack(spacing: 12) {
-				ForEach(messages) { message in
-					MessageBubble(message: message)
-				}
-				if !streamingText.isEmpty {
-					MessageBubble(text: streamingText, role: .assistant)
+				ForEach(rows) { row in
+					if row.role == .assistant {
+						StreamingMessageBubble(
+							text: row.text,
+							isStreaming: row.isStreaming,
+							status: row.status,
+							isStopping: row.id == responseID && isStopping
+						)
+					} else {
+						MessageBubble(text: row.text, role: row.role)
+					}
 				}
 				if isResponding {
 					ProgressView()
@@ -60,6 +70,36 @@ struct MessageList: View {
 			if messages.last?.role == .user { isPinnedToBottom = true }
 			if isPinnedToBottom { scrollToBottom() }
 		}
+	}
+
+	// One row identity survives the transition from a live reply to its saved message.
+	private var rows: [MessageRow] {
+		var rows = messages.map {
+			MessageRow(id: $0.id, text: $0.text, role: $0.role, status: $0.status)
+		}
+		if isResponding,
+			let responseID,
+			!streamingText.isEmpty,
+			!rows.contains(where: { $0.id == responseID })
+		{
+			rows.append(
+				MessageRow(
+					id: responseID,
+					text: streamingText,
+					role: .assistant,
+					isStreaming: true
+				)
+			)
+		}
+		return rows
+	}
+
+	private struct MessageRow: Identifiable {
+		let id: UUID
+		let text: String
+		let role: ChatMessageRole
+		var status: ChatMessageStatus = .completed
+		var isStreaming = false
 	}
 
 	private var isUserScrolling: Bool {

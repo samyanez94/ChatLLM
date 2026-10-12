@@ -20,7 +20,9 @@ struct ChatView: View {
 			MessageList(
 				messages: viewModel.messages,
 				isResponding: viewModel.isResponding,
-				streamingText: viewModel.streamingText
+				streamingText: viewModel.streamingText,
+				responseID: viewModel.responseID,
+				isStopping: viewModel.isStopping
 			)
 			.simultaneousGesture(
 				TapGesture()
