@@ -29,11 +29,13 @@ jobs:
         continue-on-error: true
         run: swift format lint --recursive ChatLLM ChatLLMTests
 
+      # SwiftStreamingMarkdown uses EquatableMacros; CI cannot show Xcode’s approval prompt.
       - name: Run tests
         run: |
           xcodebuild test \
             -project ChatLLM.xcodeproj \
             -scheme ChatLLM \
+            -skipMacroValidation \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
             CODE_SIGNING_ALLOWED=NO
 
