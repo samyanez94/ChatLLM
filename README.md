@@ -15,7 +15,7 @@ local persistence, concurrency, and LLM integrations.
 - Chat with Apple's on-device model on supported devices
 - Choose from eight hosted models, grouped by provider
 - Read model descriptions and availability information before starting a chat
-- Watch replies arrive progressively with Markdown formatting
+- Stream on-device and hosted replies with animated Markdown rendering
 - Stop generation and retain partial replies marked as stopped or interrupted
 - Save conversations locally and reopen them across app launches
 - Continue older conversations with their original model
@@ -27,6 +27,22 @@ stays with one model. The app is a personal learning project; it does not requir
 See [App Overview](https://github.com/samyanez94/ChatLLM/wiki/App-Overview#models)
 for the current model lineup and limitations.
 
+## Streaming
+
+Replies appear as they are generated. SwiftStreamingMarkdown renders live responses,
+including syntax-highlighted code blocks with the Xcode theme. Saved history loads
+without animation, and Reduce Motion bypasses the streaming animation.
+
+Stop cancels the active request and keeps the text received so far. Leaving a chat or
+backgrounding the app also stops generation; partial replies are saved as stopped or
+interrupted and remain part of the next turn’s context. Active text stays in memory
+until generation ends, so force-quitting can lose an unfinished reply.
+
+Hosted replies use server-sent events (SSE) from the existing chat endpoint. The backend
+also retains its complete JSON response mode for clients that do not request streaming.
+See [Architecture](https://github.com/samyanez94/ChatLLM/wiki/Architecture#streaming-presentation)
+and the [SSE contract](supabase/functions/_shared/STREAMING.md) for details.
+
 ## Built With
 
 - Swift and SwiftUI
@@ -35,7 +51,7 @@ for the current model lineup and limitations.
 - Apple's Foundation Models framework
 - URLSession for networking
 - Supabase Edge Functions and OpenRouter for hosted inference
-- Swift Markdown UI and Swift Collections
+- [SwiftStreamingMarkdown](https://github.com/microsoft/SwiftStreamingMarkdown) and Swift Collections
 - Swift Testing and Deno tests
 
 The project targets iOS 26.5 or later. This repository includes the iOS app and its backend.

@@ -81,5 +81,5 @@ delivery, fragmentation, compatibility, terminal events, error sanitization, and
 cancellation. Deployed smoke tests verified incremental delivery for OpenAI,
 Anthropic, and Google through the Supabase gateway, plus the default JSON
 response. Client-disconnect propagation through the deployed gateway still needs
-separate verification. The iOS client must opt in separately; this backend
-change does not change its current non-streaming behavior.
+separate verification. The iOS client now opts into `stream: true`; clients that omit the option retain
+the original JSON behavior.
