@@ -9,6 +9,9 @@ import SwiftUI
 
 struct MessageBubble: View {
 
+	private static let markdownConfig = MarkdownRenderConfig.default
+		.withCodeBlockConfig(value: .init(theme: .xcode))
+
 	let text: String
 
 	let role: ChatMessageRole
@@ -64,14 +67,14 @@ struct MessageBubble: View {
 		} else if let streamSource {
 			StreamedMarkdownView(
 				source: streamSource,
-				config: .default.withShouldAnimateText(value: true)
+				config: Self.markdownConfig.withShouldAnimateText(value: true)
 			)
 			// The library retains its source in a StateObject. A new source needs a new renderer.
 			.id(ObjectIdentifier(streamSource))
 		} else {
 			MarkdownView(
 				text: text,
-				config: .default.withShouldAnimateText(value: false)
+				config: Self.markdownConfig.withShouldAnimateText(value: false)
 			)
 		}
 	}
